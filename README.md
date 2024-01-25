@@ -1,74 +1,51 @@
-# rehearsal-room-management-backend
+# 琴房管理系统 —— 后端
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+## 开发前的准备
 
-If you want to learn more about Quarkus, please visit its website: https://quarkus.io/ .
+### 安装 IntelliJ IDEA
 
-## Running the application in dev mode
+#### 准备教育邮箱
 
-You can run your application in dev mode that enables live coding using:
-```shell script
-./gradlew quarkusDev
+![eduemail1](./readme-assets/education-email-1.png)
+点击蓝色圈圈住的地方，进入教育邮箱界面，就能看到你的教育邮箱的地址。
+
+如果你没有注册过教育邮箱，在这个地方应该有“注册教育邮箱”一类的按钮，点击注册后按提示绑定进入。
+
+如果遇到了绑定后进入不了等等问题，直接通过网址访问我校教育邮箱：http://email.mail.hfut.edu.cn/ ，然后输入你的学号和信息门户密码登录。
+
+#### 申请 IntelliJ IDEA 的教育优惠（即教育邮箱白嫖）
+
+进入 JetBrains 的官方教育优惠申请页面：https://www.jetbrains.com/shop/eform/students ，按提示操作即可。
+
+#### 安装 JetBrains Toolbox App
+
+https://www.jetbrains.com/toolbox-app/
+
+#### 安装 IntelliJ IDEA Ultimate
+
+安装 JetBrains Toolbox App 后，点击任务栏右下角托盘的 JetBrains Toolbox App 图标：
+![toolbox-icon](./readme-assets/toolbox-icon.png)
+
+在弹出的界面中安装 IntelliJ IDEA Ultimate：
+![toolbox-content](./readme-assets/toolbox-content.png)
+
+### 安装 Scoop
+
+打开 Windows PowerShell（建议先在 Microsoft Store 中安装 Windows Terminal，再通过 Windows Terminal 打开 Windows Powershell），执行：
+
+> [!IMPORTANT]
+> 由于在一般情况下，我们所处地区对于 GitHub 的访问十分的不稳定，所以在执行下面的脚本前，记得将其中 `http://<ip:port>` 改成你的代理设置，如，对于默认情况下的 Clash For Windows 设置而言，应该改为 `http://127.0.0.1:7890` 。实际的具体情况要根据你的系统代理的端口设置决定。
+> 如果你可以不需要代理稳定访问 GitHub（比如你本人不在中国大陆地区），那么将下方脚本中的 `-Proxy 'http://<ip:port>'` 部分删除。
+
+```ps1
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+Invoke-RestMethod -Uri https://get.scoop.sh -Proxy 'http://<ip:port>' | Invoke-Expression
 ```
 
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at http://localhost:8080/q/dev/.
+### 安装 git
 
-## Packaging and running the application
+在 Windows Powershell 中执行：
 
-The application can be packaged using:
-```shell script
-./gradlew build
+```ps1
+scoop install git
 ```
-It produces the `quarkus-run.jar` file in the `build/quarkus-app/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `build/quarkus-app/lib/` directory.
-
-The application is now runnable using `java -jar build/quarkus-app/quarkus-run.jar`.
-
-If you want to build an _über-jar_, execute the following command:
-```shell script
-./gradlew build -Dquarkus.package.type=uber-jar
-```
-
-The application, packaged as an _über-jar_, is now runnable using `java -jar build/*-runner.jar`.
-
-## Creating a native executable
-
-You can create a native executable using: 
-```shell script
-./gradlew build -Dquarkus.package.type=native
-```
-
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using: 
-```shell script
-./gradlew build -Dquarkus.package.type=native -Dquarkus.native.container-build=true
-```
-
-You can then execute your native executable with: `./build/rehearsal-room-management-backend-1.0.0-runner`
-
-If you want to learn more about building native executables, please consult https://quarkus.io/guides/gradle-tooling.
-
-## Related Guides
-
-- Mutiny ([guide](https://quarkus.io/guides/mutiny-primer)): Write reactive applications with the modern Reactive Programming library Mutiny
-- Hibernate Validator ([guide](https://quarkus.io/guides/validation)): Validate object properties (field, getter) and method parameters for your beans (REST, CDI, Jakarta Persistence)
-- Kotlin ([guide](https://quarkus.io/guides/kotlin)): Write your services in Kotlin
-- YAML Configuration ([guide](https://quarkus.io/guides/config-yaml)): Use YAML to configure your Quarkus application
-- Agroal - Database connection pool ([guide](https://quarkus.io/guides/datasource)): Pool JDBC database connections (included in Hibernate ORM)
-- Cache ([guide](https://quarkus.io/guides/cache)): Enable application data caching in CDI beans
-- JDBC Driver - PostgreSQL ([guide](https://quarkus.io/guides/datasource)): Connect to the PostgreSQL database via JDBC
-
-## Provided Code
-
-### YAML Config
-
-Configure your application with YAML
-
-[Related guide section...](https://quarkus.io/guides/config-reference#configuration-examples)
-
-The Quarkus application configuration is located in `src/main/resources/application.yml`.
-
-### RESTEasy Reactive
-
-Easily start your Reactive RESTful Web Services
-
-[Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)
