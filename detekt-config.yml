@@ -1,0 +1,9 @@
+style:
+  NewLineAtEndOfFile:
+    active: false
+  ReturnCount:
+    active: false
+  ThrowsCount:
+    excludeGuardClauses: true
+  WildcardImport:
+    active: false
