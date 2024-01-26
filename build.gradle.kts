@@ -6,7 +6,6 @@ plugins {
     id("io.quarkus")
     id("com.google.devtools.ksp") version "1.9.21-1.0.16"
     id("io.gitlab.arturbosch.detekt") version "1.23.4"
-    id("org.kordamp.gradle.jandex") version "1.1.0"
 }
 
 repositories {
