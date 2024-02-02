@@ -5,10 +5,12 @@ import jakarta.ws.rs.Path
 import jakarta.ws.rs.Produces
 import jakarta.ws.rs.core.MediaType
 
+const val HELLO = "Hello from RESTEasy Reactive"
+
 @Path("/hello")
 class GreetingResource {
 
     @GET
     @Produces(MediaType.TEXT_PLAIN)
-    fun hello() = "Hello from RESTEasy Reactive"
+    fun hello() = HELLO
 }

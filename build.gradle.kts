@@ -1,4 +1,8 @@
+@file:OptIn(ExperimentalPathApi::class)
+
 import java.net.URI
+import kotlin.io.path.*
+import kotlin.math.log
 
 plugins {
     kotlin("jvm") version "1.9.21"
@@ -93,5 +97,36 @@ project.afterEvaluate {
     getTasksByName("quarkusGenerateCodeDev", true).forEach { task ->
         task.setDependsOn(
             task.dependsOn.filterIsInstance<Provider<Task>>().filter { it.get().name != "processResources" })
+    }
+}
+
+// **************************** git 相关 **************************** //
+
+tasks.register("prepareGitHooks") {
+    doLast {
+        val projectGitHooksPath = project.file(".githooks").toPath()
+        if (projectGitHooksPath.notExists() || !projectGitHooksPath.isDirectory()) {
+            throw IllegalStateException("The .githooks folder is missing, please pull the project again, or clone the project, or roll back to the commit before the .githooks folder was missing.")
+        }
+        (project.file(".git").toPath() / "hooks").also {
+            it.deleteRecursively()
+            projectGitHooksPath.copyToRecursively(it, followLinks = false, overwrite = false)
+        }
+    }
+}
+
+tasks.named("prepareKotlinBuildScriptModel") {
+    dependsOn("prepareGitHooks")
+}
+
+tasks.register("checkGitCommitMessage") {
+    group = "verification"
+    doLast {
+        // 可能是编码问题
+        val message = File(project.findProperty("gitMessage") as String).readText().trimEnd()
+        val regex = Regex("^(feat|fix|docs|style|refactor|perf|test|chore|revert|ci)(\\(.*\\))?: [^\\n]{1,30}(\\n(\\n- .{1,100})+)?(\\n\\n(Fixes|Closes): #[0-9]+)?\$")
+        if (!regex.matches(message)) {
+            throw IllegalStateException("git commit message format is incorrect, please refer to the specification at https://github.com/hammer-hfut/rehearsal-room-management-backend/wiki/%E5%BC%80%E5%8F%91%E8%A7%84%E8%8C%83%23git-%E6%8F%90%E4%BA%A4%E4%BF%A1%E6%81%AF")
+        }
     }
 }
