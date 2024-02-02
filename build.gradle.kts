@@ -2,7 +2,6 @@
 
 import java.net.URI
 import kotlin.io.path.*
-import kotlin.math.log
 
 plugins {
     kotlin("jvm") version "1.9.21"
@@ -83,12 +82,13 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     kotlinOptions.javaParameters = true
 }
 
+// 代码检查
 detekt {
     buildUponDefaultConfig = true
     config.setFrom(rootProject.file("detekt-config.yml"))
-    ignoreFailures = true
 }
 
+// 解决 quarkus 与 ksp 集成的 bug
 project.afterEvaluate {
     getTasksByName("quarkusGenerateCode", true).forEach { task ->
         task.setDependsOn(
