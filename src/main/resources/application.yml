@@ -1,2 +1,7 @@
-greeting:
-  message: "hello"
+quarkus:
+  datasource:
+    devservices:
+      init-script-path: "/dev/init.sql"
+  http:
+    port: 16458
+    enable-compression: true

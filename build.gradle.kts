@@ -1,6 +1,7 @@
 @file:OptIn(ExperimentalPathApi::class)
 
 import java.net.URI
+import java.nio.file.StandardOpenOption
 import kotlin.io.path.*
 
 plugins {
@@ -24,7 +25,7 @@ val quarkusPlatformArtifactId: String by project
 val quarkusPlatformVersion: String by project
 
 dependencies {
-    val jimmerVersion = "0.8.87"
+    val jimmerVersion = "0.8.90"
     implementation(enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}"))
     // 序列化
     implementation("io.quarkus:quarkus-resteasy-reactive-jackson")
@@ -86,6 +87,7 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
 detekt {
     buildUponDefaultConfig = true
     config.setFrom(rootProject.file("detekt-config.yml"))
+
 }
 
 // 解决 quarkus 与 ksp 集成的 bug
@@ -98,6 +100,32 @@ project.afterEvaluate {
         task.setDependsOn(
             task.dependsOn.filterIsInstance<Provider<Task>>().filter { it.get().name != "processResources" })
     }
+}
+
+// **************************** 开发 相关 **************************** //
+
+tasks.register("generateDevDatabaseDDL") {
+    group = "build"
+    doLast {
+        val ddlString = requireNotNull(project.file("db/dev").listFiles()) {
+            "The db/dev folder is missing, please pull the project again, or clone the project, or roll back to the commit before the db/dev folder was missing."
+        }.asSequence()
+            .filter { '-' in it.name }
+            .sortedBy { it.name.split('-')[0].toInt() }
+            .map { it.readText() }
+            .joinToString("\n\n")
+        layout.buildDirectory.file("resources/main/dev/init.sql")
+            .get().asFile
+            .toPath()
+            .also {
+                it.parent.createDirectories()
+            }
+            .writeText(ddlString, options = arrayOf(StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING))
+    }
+}
+
+tasks.getByName("processResources") {
+    dependsOn("generateDevDatabaseDDL")
 }
 
 // **************************** git 相关 **************************** //

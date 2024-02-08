@@ -7,3 +7,8 @@ style:
     excludeGuardClauses: true
   WildcardImport:
     active: false
+  MagicNumber:
+    ignoreEnums: true
+    ignoreAnnotation: true
+  MaxLineLength:
+    active: false
