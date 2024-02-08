@@ -2,6 +2,7 @@ package io.github.hammerhfut.rehearsal.resource
 
 import io.github.hammerhfut.rehearsal.model.db.User
 import io.github.hammerhfut.rehearsal.model.db.by
+import io.smallrye.common.annotation.RunOnVirtualThread
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import org.babyfish.jimmer.kt.new
@@ -14,6 +15,7 @@ class UserResource(
 ) {
     @Path("/demo")
     @POST
+    @RunOnVirtualThread
     fun saveDemoUser() {
         sqlClient.insert(new(User::class).by {
             username = "demo"

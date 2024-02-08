@@ -7,6 +7,7 @@ import io.github.hammerhfut.rehearsal.model.db.Announcement
 import io.github.hammerhfut.rehearsal.model.db.copy
 import io.github.hammerhfut.rehearsal.model.db.dto.AnnouncementSaveDto
 import io.github.hammerhfut.rehearsal.model.db.fetchBy
+import io.smallrye.common.annotation.RunOnVirtualThread
 import jakarta.ws.rs.*
 import org.babyfish.jimmer.Page
 import org.babyfish.jimmer.sql.kt.KSqlClient
@@ -18,6 +19,7 @@ class AnnouncementResource(
     private val sqlClient: KSqlClient
 ) {
     @GET
+    @RunOnVirtualThread
     fun pageAnnouncements(@BeanParam paging: Paging): Page<Announcement> {
         return sqlClient.createQuery(Announcement::class) {
             select(table.fetchBy {
@@ -31,6 +33,7 @@ class AnnouncementResource(
     }
 
     @PUT
+    @RunOnVirtualThread
     fun saveAnnouncement(input: AnnouncementSaveDto) {
         sqlClient.save(input.toEntity().copy {
             createTime = LocalDateTime.now()
@@ -42,6 +45,7 @@ class AnnouncementResource(
 
     @Path("/{id}")
     @DELETE
+    @RunOnVirtualThread
     fun deleteAnnouncement(@RestPath id: Long) {
         if (sqlClient.deleteById(Announcement::class, id).totalAffectedRowCount != 1) {
             throw BusinessError(ErrorCode.NOT_FOUND, "未找到 id 为 $id 的公告")
