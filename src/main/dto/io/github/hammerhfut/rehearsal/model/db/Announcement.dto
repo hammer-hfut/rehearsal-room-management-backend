@@ -1,0 +1,5 @@
+dynamic input AnnouncementSaveDto {
+    id?
+    content
+    isPinned
+}
