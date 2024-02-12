@@ -18,4 +18,18 @@ interface User {
     @get:JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     val password: String
     val createTime: LocalDateTime
+    val joinTime: LocalDateTime?
+
+    @Serialized
+    val contact: Map<String, String>
+
+    @ManyToMany
+    @JoinTable(name = "band_user_mapping", joinColumnName = "user_id")
+    val joinedBands: List<Band>
+
+    @OneToMany(mappedBy = "owner")
+    val equipments: List<Equipment>
+
+    @OneToMany(mappedBy = "receiver")
+    val notices: List<LogNotice>
 }

@@ -22,6 +22,7 @@ class UserResource(
             realname = "得摸"
             password = "123"
             createTime = LocalDateTime.now()
+            contact = mapOf()
         })
     }
 }
