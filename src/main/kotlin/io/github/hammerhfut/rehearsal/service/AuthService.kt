@@ -32,7 +32,7 @@ class AuthService {
 
     private fun encodePwd(pwd: String) = BCrypt.hashpw(pwd, BCrypt.gensalt(12))
 
-    fun generateUToken(id: Long, userTimestamp: Long):String {
+    fun generateUToken(id: Long, userTimestamp: Long):Pair<String, Long> {
         var flag = true
         var uToken = ""
         var serverTimestamp: Long = 0
@@ -49,6 +49,6 @@ class AuthService {
         }
         val key = serverTimestamp - userTimestamp
 //        TODO Caffeine缓存
-        return uToken
+        return Pair(uToken, serverTimestamp)
     }
 }

@@ -1,6 +1,5 @@
 package io.github.hammerhfut.rehearsal.resource
 
-import com.github.benmanes.caffeine.cache.Caffeine
 import io.github.hammerhfut.rehearsal.model.db.User
 import io.github.hammerhfut.rehearsal.model.db.fetchBy
 import io.github.hammerhfut.rehearsal.model.db.username
@@ -25,10 +24,11 @@ class AuthResource(
     private val authService: AuthService
 ) {
     @POST
+    @Path("/login")
     @RunOnVirtualThread
     fun login(input: LoginData): LoginResponse {
         val user = sqlClient.createQuery(User::class) {
-            where(table.username.eq(input.uid))
+            where(table.username.eq(input.username))
             select(
                 table.fetchBy {
                     allScalarFields()
@@ -37,24 +37,22 @@ class AuthResource(
         }.fetchOneOrNull()
             ?.takeIf {BCrypt.checkpw(input.password, it.password)}
             ?: throw Error() // TODO 异常处理
-        val uToken= authService.generateUToken(user.username.toLong(), input.timestamp)
-        return LoginResponse(uToken, LIFETIME)
+        val uTokenResult= authService.generateUToken(user.id, input.timestamp)
+        return LoginResponse(uTokenResult.first, LIFETIME, uTokenResult.second)
     }
-
-
 
 }
 
-
 data class LoginData(
-    val uid: String,
+    val username: String,
     val password: String,
     val timestamp: Long
 )
 
 data class LoginResponse(
     val uToken: String,
-    val lifetime: Long
+    val lifetime: Long,
+    val timestamp: Long
 )
 
 data class UTokenCacheData(
