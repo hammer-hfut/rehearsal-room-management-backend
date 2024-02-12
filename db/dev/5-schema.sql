@@ -243,3 +243,9 @@ create table user_role
 
 alter table user_role
     owner to postgres;
+
+INSERT INTO "public"."t_user" ("username", "realname", "password", "create_time", "contact")
+VALUES
+('s114514', '超只因管理员', '$2a$12$qtTvimr/kiqX7z.KAtBrB.XGYaBj71dexWSlg8ijhFhbiprNrHPve', '2024-02-12 17:54:27', '{}'),
+('a1919810', '普通管理员', '$2a$12$DYV6uMcFopGVr5BPvoML4.CFknvCRPAIzToJm6JJhTcU8QdAXU4ie', '2024-02-12 17:58:48', '{}'),
+('u12138', '平凡的用户', '$2a$12$4n8F7/GX/fdoeFLf0TvoDuXypo9Wgd9w1KNr/ddZxcdTC10eAUpl6', '2024-02-12 18:00:20', '{}');

@@ -55,9 +55,12 @@ dependencies {
     implementation("io.quarkus:quarkus-security")
     // web
     implementation("io.quarkus:quarkus-resteasy-reactive")
+    // bcrypt加密
+    implementation("org.mindrot:jbcrypt:0.4")
     // 测试
     testImplementation("io.quarkus:quarkus-junit5")
     testImplementation("io.rest-assured:rest-assured")
+
 }
 
 group = "io.github.hammerhfut"
