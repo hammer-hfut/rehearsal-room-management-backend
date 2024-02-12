@@ -8,7 +8,9 @@ create table t_user
     password    text                     not null,
     create_time timestamp with time zone not null,
     join_time   timestamp with time zone,
-    contact     jsonb                    not null
+    contact        jsonb not null,
+    expire_time    timestamp with time zone default null,
+    expire_comment text  not null           default ''
 );
 
 comment on column t_user.join_time is '加入大艺团的时间';

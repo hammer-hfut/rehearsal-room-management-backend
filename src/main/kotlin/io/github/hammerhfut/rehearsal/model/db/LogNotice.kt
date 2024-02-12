@@ -1,12 +1,13 @@
 package io.github.hammerhfut.rehearsal.model.db
 
 import org.babyfish.jimmer.sql.*
+import java.util.*
 
 @Entity
 interface LogNotice {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long
+    val id: UUID
     val isRead: Boolean
 
     @Key

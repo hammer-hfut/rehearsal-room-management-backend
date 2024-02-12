@@ -19,6 +19,8 @@ interface User {
     val password: String
     val createTime: LocalDateTime
     val joinTime: LocalDateTime?
+    val expireTime: LocalDateTime?
+    val expireComment: String
 
     @Serialized
     val contact: Map<String, String>
