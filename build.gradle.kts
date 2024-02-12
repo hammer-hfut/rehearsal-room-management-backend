@@ -1,5 +1,6 @@
 @file:OptIn(ExperimentalPathApi::class)
 
+import kotlinx.coroutines.*
 import java.net.URI
 import java.nio.file.StandardOpenOption
 import kotlin.io.path.*
@@ -107,20 +108,33 @@ project.afterEvaluate {
 tasks.register("generateDevDatabaseDDL") {
     group = "build"
     doLast {
-        val ddlString = requireNotNull(project.file("db/dev").listFiles()) {
-            "The db/dev folder is missing, please pull the project again, or clone the project, or roll back to the commit before the db/dev folder was missing."
-        }.asSequence()
-            .filter { '-' in it.name }
-            .sortedBy { it.name.split('-')[0].toInt() }
-            .map { it.readText() }
-            .joinToString("\n\n")
-        layout.buildDirectory.file("resources/main/dev/init.sql")
-            .get().asFile
-            .toPath()
-            .also {
-                it.parent.createDirectories()
+        runBlocking(Dispatchers.IO) {
+            val ddlString = buildString {
+                requireNotNull(project.file("db/dev").listFiles()) {
+                    "The db/dev folder is missing, please pull the project again, or clone the project, or roll back to the commit before the db/dev folder was missing."
+                }.asSequence()
+                    .filter { '-' in it.name && it.extension == "sql" }
+                    .map { it.name.split('-') to async { it.readText() } }
+                    .sortedBy { (names, _) -> names[0].toInt() }
+                    .forEach { (names, deferredText) ->
+                        val text = deferredText.await().let {
+                            return@let if (names[1] == "schema.sql") {
+                                it.replace(Regex("alter table [a-z_]+\\s+owner to [a-z_]+;"), "")
+                            } else {
+                                it
+                            }
+                        }
+                        appendLine(text)
+                    }
             }
-            .writeText(ddlString, options = arrayOf(StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING))
+            layout.buildDirectory.file("resources/main/dev/init.sql")
+                .get().asFile
+                .toPath()
+                .also {
+                    it.parent.createDirectories()
+                }
+                .writeText(ddlString, options = arrayOf(StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING))
+        }
     }
 }
 
