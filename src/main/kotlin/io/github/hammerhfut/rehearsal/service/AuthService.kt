@@ -1,36 +1,41 @@
 package io.github.hammerhfut.rehearsal.service
 
+import com.github.benmanes.caffeine.cache.Caffeine
+import io.github.hammerhfut.rehearsal.model.UTokenCacheData
 import jakarta.inject.Singleton
-import org.mindrot.jbcrypt.BCrypt
 import java.nio.ByteBuffer
 import java.util.*
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.toJavaDuration
 
 /**
  *@author prixii
  *@date 2024/2/12 14:28
  */
 
+val LIFETIME = 1.hours.toJavaDuration()
+const val MAX_NUM: Long = 0xff
+const val BYTE_SIZE = 8
 @Singleton
 class AuthService {
+    private val uTokenCache = Caffeine.newBuilder()
+        .expireAfterAccess(LIFETIME)
+        .build<String, UTokenCacheData>()
     fun decodeUid(uid: String, timestamp: Long): Long {
         val byteArray = Base64.getDecoder().decode(uid)
         val username = byteArrayToLong(byteArray) - timestamp
         return username
     }
 
-
     private fun byteArrayToLong(byteArray: ByteArray): Long {
 
         var value: Long = 0
-
         for (i in byteArray.indices) {
-            value = value shl 8
-            value = value or (byteArray[i].toLong() and 0xff)
+            value = value shl BYTE_SIZE
+            value = value or (byteArray[i].toLong() and MAX_NUM)
         }
         return value
     }
-
-    private fun encodePwd(pwd: String) = BCrypt.hashpw(pwd, BCrypt.gensalt(12))
 
     fun generateUToken(id: Long, userTimestamp: Long):Pair<String, Long> {
         var flag = true
@@ -44,11 +49,10 @@ class AuthService {
                     ByteBuffer.allocate(java.lang.Long.BYTES)
                         .putLong(id + serverTimestamp)
                         .array())
-//            TODO 判定 [uToken] 是否已存在
-            flag = false
+            flag =  uTokenCache.getIfPresent(uToken) != null
         }
         val key = serverTimestamp - userTimestamp
-//        TODO Caffeine缓存
+        uTokenCache.put(uToken, UTokenCacheData(id, LIFETIME.toMillis(), key))
         return Pair(uToken, serverTimestamp)
     }
 }

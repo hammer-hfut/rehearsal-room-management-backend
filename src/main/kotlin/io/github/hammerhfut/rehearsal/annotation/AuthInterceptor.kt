@@ -48,6 +48,7 @@ class AuthInterceptor: ContainerRequestFilter {
 
     private fun checkUrl(uToken: String, url: String): Boolean {
         // TODO [url] 校验
+        println("[uToken]: $uToken, [url] $url:")
         return true
     }
 }

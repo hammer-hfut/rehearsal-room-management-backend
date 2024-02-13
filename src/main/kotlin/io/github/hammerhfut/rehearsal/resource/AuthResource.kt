@@ -1,9 +1,12 @@
 package io.github.hammerhfut.rehearsal.resource
 
+import io.github.hammerhfut.rehearsal.exception.BusinessError
+import io.github.hammerhfut.rehearsal.exception.ErrorCode
 import io.github.hammerhfut.rehearsal.model.db.User
 import io.github.hammerhfut.rehearsal.model.db.fetchBy
 import io.github.hammerhfut.rehearsal.model.db.username
 import io.github.hammerhfut.rehearsal.service.AuthService
+import io.github.hammerhfut.rehearsal.service.LIFETIME
 import io.smallrye.common.annotation.RunOnVirtualThread
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.POST
@@ -17,7 +20,6 @@ import org.mindrot.jbcrypt.BCrypt
  *@date 2024/2/12 13:10
  */
 
-const val LIFETIME: Long = 114514
 
 @Path("/auth")
 class AuthResource(
@@ -37,16 +39,17 @@ class AuthResource(
             )
         }.fetchOneOrNull()
             ?.takeIf {BCrypt.checkpw(input.password, it.password)}
-            ?: throw Error() // TODO 异常处理
+            ?: throw BusinessError(ErrorCode.FORBIDDEN ) // TODO 异常处理
         val uTokenResult= authService.generateUToken(user.id, input.timestamp)
-        return LoginResponse(uTokenResult.first, LIFETIME, uTokenResult.second)
+        return LoginResponse(uTokenResult.first, LIFETIME.toMillis(), uTokenResult.second)
     }
 
     @GET
     @Path("/test-token")
     @RunOnVirtualThread
     fun testToken():String {
-        return "test token"
+        val testMsg = "test token"
+        return testMsg
     }
 }
 
@@ -60,10 +63,4 @@ data class LoginResponse(
     val uToken: String,
     val lifetime: Long,
     val timestamp: Long
-)
-
-data class UTokenCacheData(
-    val id: Long,
-    val lifetime: Long,
-    val key: Long
 )

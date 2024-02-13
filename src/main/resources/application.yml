@@ -5,3 +5,7 @@ quarkus:
   http:
     port: 16458
     enable-compression: true
+  cache:
+    caffeine:
+      "maij-token-policy":
+        maximum-size: 100
