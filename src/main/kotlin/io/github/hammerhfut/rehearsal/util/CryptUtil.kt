@@ -11,7 +11,7 @@ import javax.crypto.spec.SecretKeySpec
 
 const val AES_KEY_LENGTH = 16
 const val CIPHER_INSTANCE_NAME = "AES/ECB/PKCS5Padding"
-const val CRYPT_ALGORITHM = "ARE"
+const val CRYPT_ALGORITHM = "AES"
 const val FILL_CHARACTER = 'X'
 
 fun aesDecrypt(encryptedText: String, secretKeySpec: SecretKeySpec): String {

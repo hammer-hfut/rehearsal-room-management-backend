@@ -1,12 +1,11 @@
 package io.github.hammerhfut.rehearsal.service
 
 import com.github.benmanes.caffeine.cache.Caffeine
-import io.github.hammerhfut.rehearsal.exception.BusinessError
-import io.github.hammerhfut.rehearsal.exception.ErrorCode
 import io.github.hammerhfut.rehearsal.model.UTokenCacheData
 import io.github.hammerhfut.rehearsal.util.generateSecretKeySpec
 import jakarta.inject.Singleton
 import java.nio.ByteBuffer
+import java.security.Key
 import java.util.*
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.toJavaDuration
@@ -19,11 +18,15 @@ import kotlin.time.toJavaDuration
 val LIFETIME = 1.hours.toJavaDuration()
 const val MAX_NUM: Long = 0xff
 const val BYTE_SIZE = 8
+
 @Singleton
 class AuthService {
     private val uTokenCache = Caffeine.newBuilder()
-        .expireAfterAccess(LIFETIME)
+        .expireAfterWrite(LIFETIME)
         .build<String, UTokenCacheData>()
+
+    private val random = Random()
+
     fun decodeUid(uid: String, timestamp: Long): Long {
         val byteArray = Base64.getDecoder().decode(uid)
         val username = byteArrayToLong(byteArray) - timestamp
@@ -54,10 +57,26 @@ class AuthService {
                         .array())
             flag =  uTokenCache.getIfPresent(uToken) != null
         }
-        val key = generateSecretKeySpec((serverTimestamp - userTimestamp).toString())
-        uTokenCache.put(uToken, UTokenCacheData(id, LIFETIME.toMillis(), key))
+        val key = serverTimestamp - userTimestamp
+        val keySpec = generateSecretKeySpec(key.toString())
+        uTokenCache.put(uToken, UTokenCacheData(id, LIFETIME.toMillis(), key, keySpec))
         return Pair(uToken, serverTimestamp)
     }
 
-    fun getUTokenCacheData(uToken: String): UTokenCacheData = uTokenCache.getIfPresent(uToken) ?: throw BusinessError(ErrorCode.NOT_FOUND)
+    fun findUTokenCacheDataOrNull(uToken: String): UTokenCacheData? = uTokenCache.getIfPresent(uToken)
+
+    fun refreshKey(uTokenCacheData: UTokenCacheData): Int {
+        var key = uTokenCacheData.key
+        val rand = random.nextInt(100)
+        if (isOdd(key % rand % 2)) {
+            key += rand
+        } else {
+            key -= rand
+        }
+        uTokenCacheData.key = key
+        uTokenCacheData.keySpec = generateSecretKeySpec(key.toString())
+        return rand
+    }
+
+    private fun isOdd(num: Long) = num % 2 == 1L
 }

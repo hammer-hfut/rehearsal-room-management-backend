@@ -10,6 +10,6 @@ import javax.crypto.spec.SecretKeySpec
 data class UTokenCacheData(
     val id: Long,
     val lifetime: Long,
-    val key: SecretKeySpec
-
+    var key: Long,
+    var keySpec: SecretKeySpec
 )
