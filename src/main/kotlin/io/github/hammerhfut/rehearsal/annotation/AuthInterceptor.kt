@@ -1,5 +1,7 @@
 package io.github.hammerhfut.rehearsal.annotation
 
+import io.github.hammerhfut.rehearsal.service.AuthService
+import io.github.hammerhfut.rehearsal.util.aesDecrypt
 import io.vertx.ext.web.RoutingContext
 import jakarta.annotation.Priority
 import jakarta.interceptor.Interceptor
@@ -17,9 +19,15 @@ import jakarta.ws.rs.ext.Provider
  *@date 2024/2/12 19:52
  */
 
+const val HEADER_UTOKEN = "x-rehearsal-utoken"
+const val HEADER_TOKEN = "x-rehearsal-token"
+const val LOGIN_API_PATH = "/auth/login"
+
 @Priority(Interceptor.Priority.PLATFORM_BEFORE + 1)
 @Provider
-class AuthInterceptor: ContainerRequestFilter {
+class AuthInterceptor(
+    private val authService: AuthService
+): ContainerRequestFilter {
 
     @Context
     var context: RoutingContext? = null
@@ -31,24 +39,26 @@ class AuthInterceptor: ContainerRequestFilter {
     var uriInfo: UriInfo? = null
 
     override fun filter(p0: ContainerRequestContext?) {
-        val uToken = header?.getHeaderString("uToken")
+        val uToken = header?.getHeaderString(HEADER_UTOKEN)
+        val encryptedUrl = header?.getHeaderString(HEADER_TOKEN)
         val path = uriInfo?.path
-        if (path != "/auth/login") {
+        if (path != LOGIN_API_PATH) {
             // 除了 [login] 都需要校验url合法性
             val badResponse = WebApplicationException(Response.status(Response.Status.BAD_REQUEST).build())
-            if (path == null || uToken == null) {
+            if (path == null || uToken == null || encryptedUrl == null) {
                 throw badResponse
             }
-            println("[url-checker!]")
-             if (!checkUrl(uToken, path)) {
+             if (!checkUrl(uToken, encryptedUrl, path)) {
                  throw badResponse
              }
         }
     }
 
-    private fun checkUrl(uToken: String, url: String): Boolean {
-        // TODO [url] 校验
-        println("[uToken]: $uToken, [url] $url:")
-        return true
+    private fun checkUrl(uToken: String, token: String, url: String): Boolean {
+        val uTokenCache = authService.getUTokenCacheData(uToken)
+        // TODO 检测是否过期
+        val decryptedUrl = aesDecrypt(token, uTokenCache.key)
+        return  (decryptedUrl == url)
     }
+
 }

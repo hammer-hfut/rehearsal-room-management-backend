@@ -1,5 +1,7 @@
 package io.github.hammerhfut.rehearsal.model
 
+import javax.crypto.spec.SecretKeySpec
+
 /**
  *@author prixii
  *@date 2024/2/13 20:20
@@ -8,5 +10,6 @@ package io.github.hammerhfut.rehearsal.model
 data class UTokenCacheData(
     val id: Long,
     val lifetime: Long,
-    val key: Long
+    val key: SecretKeySpec
+
 )

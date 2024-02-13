@@ -1,7 +1,10 @@
 package io.github.hammerhfut.rehearsal.service
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import io.github.hammerhfut.rehearsal.exception.BusinessError
+import io.github.hammerhfut.rehearsal.exception.ErrorCode
 import io.github.hammerhfut.rehearsal.model.UTokenCacheData
+import io.github.hammerhfut.rehearsal.util.generateSecretKeySpec
 import jakarta.inject.Singleton
 import java.nio.ByteBuffer
 import java.util.*
@@ -51,8 +54,10 @@ class AuthService {
                         .array())
             flag =  uTokenCache.getIfPresent(uToken) != null
         }
-        val key = serverTimestamp - userTimestamp
+        val key = generateSecretKeySpec((serverTimestamp - userTimestamp).toString())
         uTokenCache.put(uToken, UTokenCacheData(id, LIFETIME.toMillis(), key))
         return Pair(uToken, serverTimestamp)
     }
+
+    fun getUTokenCacheData(uToken: String): UTokenCacheData = uTokenCache.getIfPresent(uToken) ?: throw BusinessError(ErrorCode.NOT_FOUND)
 }
