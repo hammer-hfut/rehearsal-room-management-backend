@@ -5,6 +5,7 @@ import io.github.hammerhfut.rehearsal.model.db.fetchBy
 import io.github.hammerhfut.rehearsal.model.db.username
 import io.github.hammerhfut.rehearsal.service.AuthService
 import io.smallrye.common.annotation.RunOnVirtualThread
+import jakarta.ws.rs.GET
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import org.babyfish.jimmer.sql.kt.KSqlClient
@@ -41,6 +42,12 @@ class AuthResource(
         return LoginResponse(uTokenResult.first, LIFETIME, uTokenResult.second)
     }
 
+    @GET
+    @Path("/test-token")
+    @RunOnVirtualThread
+    fun testToken():String {
+        return "test token"
+    }
 }
 
 data class LoginData(
