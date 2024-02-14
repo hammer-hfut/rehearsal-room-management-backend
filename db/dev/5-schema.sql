@@ -1,4 +1,4 @@
-create table IF NOT EXISTS t_user
+create table t_user
 (
     id          bigserial
         constraint t_user_pk
@@ -23,7 +23,7 @@ alter table t_user
 create unique index IF NOT EXISTS t_user_username_uindex
     on t_user (username);
 
-create table IF NOT EXISTS announcement
+create table if not exists announcement
 (
     id          bigserial
         constraint announcement_pk
@@ -39,7 +39,7 @@ create table IF NOT EXISTS announcement
 alter table announcement
     owner to postgres;
 
-create table IF NOT EXISTS band
+create table if not exists band
 (
     id        serial
         constraint band_pk
@@ -53,7 +53,7 @@ create table IF NOT EXISTS band
 alter table band
     owner to postgres;
 
-create table IF NOT EXISTS place
+create table if not exists place
 (
     id   serial
         constraint place_pk
@@ -66,7 +66,7 @@ create table IF NOT EXISTS place
 alter table place
     owner to postgres;
 
-create table IF NOT EXISTS appointment
+create table if not exists appointment
 (
     id         bigserial
         constraint appointment_pk
@@ -87,7 +87,7 @@ create table IF NOT EXISTS appointment
 alter table appointment
     owner to postgres;
 
-create table IF NOT EXISTS operation_log
+create table if not exists operation_log
 (
     id                 uuid                     not null
         constraint operate_log_pk
@@ -110,7 +110,7 @@ create index IF NOT EXISTS operate_log_create_time_index
 create index IF NOT EXISTS operate_log_target_module_name_index
     on operation_log using hash (target_module_name);
 
-create table IF NOT EXISTS band_user_mapping
+create table if not exists band_user_mapping
 (
     band_id integer not null
         constraint band_user_mapping_band_id_fk
@@ -125,7 +125,7 @@ create table IF NOT EXISTS band_user_mapping
 alter table band_user_mapping
     owner to postgres;
 
-create table IF NOT EXISTS log_notice
+create table if not exists log_notice
 (
     id          uuid    not null
         constraint log_notice_pk_2
@@ -144,7 +144,7 @@ create table IF NOT EXISTS log_notice
 alter table log_notice
     owner to postgres;
 
-create table IF NOT EXISTS equipment
+create table if not exists equipment
 (
     id               bigserial
         constraint equipment_pk
@@ -160,7 +160,7 @@ create table IF NOT EXISTS equipment
 alter table equipment
     owner to postgres;
 
-create table IF NOT EXISTS equipment_tag
+create table if not exists equipment_tag
 (
     id   bigserial
         constraint equipment_tag_pk
@@ -173,7 +173,7 @@ create table IF NOT EXISTS equipment_tag
 alter table equipment_tag
     owner to postgres;
 
-create table IF NOT EXISTS equipment_tag_mapping
+create table if not exists equipment_tag_mapping
 (
     equipment_id bigint not null
         constraint equipment_tag_mapping_equipment_id_fk
@@ -188,7 +188,7 @@ create table IF NOT EXISTS equipment_tag_mapping
 alter table equipment_tag_mapping
     owner to postgres;
 
-create table IF NOT EXISTS role
+create table if not exists role
 (
     name          text                 not null,
     remark        text                 not null,
@@ -210,7 +210,7 @@ comment on column role.upper_role_id is '在点命名空间中的上级，譬如
 alter table role
     owner to postgres;
 
-create table IF NOT EXISTS united_role
+create table if not exists united_role
 (
     role_id       bigint not null
         constraint united_role_role_id_fk
@@ -225,7 +225,7 @@ create table IF NOT EXISTS united_role
 alter table united_role
     owner to postgres;
 
-create table IF NOT EXISTS user_role
+create table if not exists user_role
 (
     user_id bigint not null
         constraint user_role_t_user_id_fk

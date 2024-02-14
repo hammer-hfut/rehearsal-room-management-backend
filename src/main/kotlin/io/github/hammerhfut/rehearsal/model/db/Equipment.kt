@@ -1,7 +1,15 @@
 package io.github.hammerhfut.rehearsal.model.db
 
+import io.quarkus.runtime.annotations.RegisterForReflection
 import org.babyfish.jimmer.sql.*
 
+@RegisterForReflection(
+    targets = [
+        Equipment::class,
+        EquipmentDraft::class,
+        EquipmentDraft.`$`::class,
+    ]
+)
 @Entity
 interface Equipment {
     @Id
