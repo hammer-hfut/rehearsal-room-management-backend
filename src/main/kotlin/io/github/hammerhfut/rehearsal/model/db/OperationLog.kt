@@ -1,10 +1,18 @@
 package io.github.hammerhfut.rehearsal.model.db
 
+import io.quarkus.runtime.annotations.RegisterForReflection
 import org.babyfish.jimmer.sql.*
 import org.babyfish.jimmer.sql.meta.UUIDIdGenerator
 import java.time.LocalDateTime
 import java.util.*
 
+@RegisterForReflection(
+    targets = [
+        OperationLog::class,
+        OperationLogDraft::class,
+        OperationLogDraft.`$`::class,
+    ]
+)
 @Entity
 interface OperationLog {
     @Id

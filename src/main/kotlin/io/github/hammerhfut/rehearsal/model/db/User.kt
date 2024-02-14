@@ -1,9 +1,17 @@
 package io.github.hammerhfut.rehearsal.model.db
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.quarkus.runtime.annotations.RegisterForReflection
 import org.babyfish.jimmer.sql.*
 import java.time.LocalDateTime
 
+@RegisterForReflection(
+    targets = [
+        User::class,
+        UserDraft::class,
+        UserDraft.`$`::class,
+    ]
+)
 @Entity
 @Table(name = "t_user")
 interface User {
