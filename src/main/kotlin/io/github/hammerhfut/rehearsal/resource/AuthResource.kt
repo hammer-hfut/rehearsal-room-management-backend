@@ -1,8 +1,8 @@
 package io.github.hammerhfut.rehearsal.resource
 
-import io.github.hammerhfut.rehearsal.annotation.HEADER_UTOKEN
 import io.github.hammerhfut.rehearsal.exception.BusinessError
 import io.github.hammerhfut.rehearsal.exception.ErrorCode
+import io.github.hammerhfut.rehearsal.interceptor.AuthInterceptor
 import io.github.hammerhfut.rehearsal.model.db.User
 import io.github.hammerhfut.rehearsal.model.db.fetchBy
 import io.github.hammerhfut.rehearsal.model.db.username
@@ -60,7 +60,7 @@ class AuthResource(
     @PUT
     @Path("/refresh/{key}")
     @RunOnVirtualThread
-    fun refreshKey(@RestPath key: Long, @HeaderParam(HEADER_UTOKEN) uToken: String): Int {
+    fun refreshKey(@RestPath key: Long, @HeaderParam(AuthInterceptor.HEADER_AUTHORIZATION) uToken: String): Int {
         val uTokenCache = authService.findUTokenCacheDataOrNull(uToken)
             ?.takeIf { it.key == key  }
             ?: throw BusinessError(ErrorCode.NOT_FOUND)
