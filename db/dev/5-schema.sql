@@ -1,4 +1,4 @@
-create table t_user
+create table if not exists t_user
 (
     id          bigserial
         constraint t_user_pk
@@ -203,6 +203,9 @@ create table if not exists role
         unique (name, upper_role_id)
 );
 
+create unique index IF NOT EXISTS role_name_uindex
+    on role (name);
+
 comment on column role.name is '英文的命名空间，如appoint';
 
 comment on column role.upper_role_id is '在点命名空间中的上级，譬如admin.appoint中的admin就是upper_role';
@@ -252,4 +255,15 @@ VALUES
     ('a1919810', '普通管理员', '$2a$12$DYV6uMcFopGVr5BPvoML4.CFknvCRPAIzToJm6JJhTcU8QdAXU4ie', '2024-02-12 17:58:48', '{}'),
     ('u12138', '平凡的用户', '$2a$12$4n8F7/GX/fdoeFLf0TvoDuXypo9Wgd9w1KNr/ddZxcdTC10eAUpl6', '2024-02-12 18:00:20', '{}')
     ON conflict(username)
+    DO NOTHING;
+
+INSERT INTO "public"."role" ("id", "name", "remark", "editable", "upper_role_id")
+VALUES
+    (1, 'admin', 'sys', false, null),
+    (2, 'ann', '', false, null),
+    (3, 'sys', '', false, 1),
+    (4, 'app', '', false, 1),
+    (5, 'hrm', '', false, 1),
+    (6, 'pwd', '', false, 3)
+    ON conflict(name)
     DO NOTHING;
