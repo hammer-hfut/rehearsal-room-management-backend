@@ -16,3 +16,8 @@ data class LoginResponse(
     val lifetime: Long,
     val timestamp: Long
 )
+
+data class RefreshKeyResponse (
+    val lifetime: Long,
+    val rand: Int
+)

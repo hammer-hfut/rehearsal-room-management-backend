@@ -43,6 +43,9 @@ class AuthService {
         return value
     }
 
+    /**
+     * @return (uToken, timestamp)
+     */
     fun generateUToken(id: Long, userTimestamp: Long):Pair<String, Long> {
         var flag = true
         var uToken = ""
@@ -57,7 +60,7 @@ class AuthService {
                         .array())
             flag =  uTokenCache.getIfPresent(uToken) != null
         }
-        val key = serverTimestamp - userTimestamp
+        val key = serverTimestamp + userTimestamp
         val keySpec = generateSecretKeySpec(key.toString())
         uTokenCache.put(uToken, UTokenCacheData(id, LIFETIME.toMillis(), key, keySpec))
         return Pair(uToken, serverTimestamp)
