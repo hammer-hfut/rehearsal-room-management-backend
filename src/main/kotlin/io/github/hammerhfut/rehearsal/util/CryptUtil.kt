@@ -1,5 +1,6 @@
 package io.github.hammerhfut.rehearsal.util
 
+import java.nio.charset.StandardCharsets
 import java.util.*
 import javax.crypto.Cipher
 import javax.crypto.spec.SecretKeySpec
@@ -24,17 +25,30 @@ fun aesDecrypt(encryptedText: String, secretKeySpec: SecretKeySpec): String {
     return String(decryptedBytes)
 }
 
+fun aesEncrypt(rawUrl: String, keySpec: SecretKeySpec): String {
+    val cipher = Cipher.getInstance(CIPHER_INSTANCE_NAME)
+    cipher.init(Cipher.ENCRYPT_MODE, keySpec)
+    val encryptedBytes = cipher.doFinal(rawUrl.toByteArray(StandardCharsets.UTF_8))
+    return Base64.getEncoder().encodeToString(encryptedBytes)
+}
+
+/**
+ * [key]: Long直接 toString 就行了
+ */
 fun generateSecretKeySpec(key: String): SecretKeySpec {
     val aesKey = key.padStart(AES_KEY_LENGTH, FILL_CHARACTER)
     return SecretKeySpec(aesKey.toByteArray(), CRYPT_ALGORITHM)
 }
 
+/**
+ * @return (utoken, urlToken)
+ */
 fun splitToken(token: String): Pair<String, String> {
-    var uToken: String
+    var utoken: String
     var urlToken: String
     token.substring(BEARER_LENGTH).also {
-        uToken = it.substring(0, U_TOKEN_LENGTH)
+        utoken = it.substring(0, U_TOKEN_LENGTH)
         urlToken = it.substring(U_TOKEN_LENGTH)
     }
-    return Pair(uToken, urlToken)
+    return Pair(utoken, urlToken)
 }

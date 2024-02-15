@@ -11,6 +11,7 @@ import io.github.hammerhfut.rehearsal.model.dto.LoginResponse
 import io.github.hammerhfut.rehearsal.model.dto.RefreshKeyResponse
 import io.github.hammerhfut.rehearsal.service.AuthService
 import io.github.hammerhfut.rehearsal.service.LIFETIME
+import io.github.hammerhfut.rehearsal.util.splitToken
 import io.smallrye.common.annotation.RunOnVirtualThread
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.HeaderParam
@@ -46,11 +47,11 @@ class AuthResource(
         }.fetchOneOrNull()
             ?.takeIf {BCrypt.checkpw(input.password, it.password)}
             ?: throw BusinessError(ErrorCode.FORBIDDEN ) // TODO 异常处理
-        val uTokenResult= authService.generateUToken(user.id, input.timestamp)
+        val utokenResult= authService.generateUToken(user.id, input.timestamp)
         return LoginResponse(
-            uToken =  uTokenResult.first,
+            utoken =  utokenResult.first,
             lifetime =  LIFETIME.toMillis(),
-            timestamp =  uTokenResult.second
+            timestamp =  utokenResult.second
         )
     }
 
@@ -65,12 +66,12 @@ class AuthResource(
     @PUT
     @Path("/refresh/{key}")
     @RunOnVirtualThread
-    fun refreshKey(@RestPath key: Long, @HeaderParam(AuthInterceptor.HEADER_AUTHORIZATION) uToken: String): RefreshKeyResponse {
-        val uTokenCache = authService.findUTokenCacheDataOrNull(uToken)
+    fun refreshKey(@RestPath key: Long, @HeaderParam(AuthInterceptor.HEADER_AUTHORIZATION) token: String): RefreshKeyResponse {
+        val utokenCache = authService.findUTokenCacheDataOrNull(splitToken(token).first)
             ?.takeIf { it.key == key  }
             ?: throw BusinessError(ErrorCode.NOT_FOUND)
         return RefreshKeyResponse(
-            rand =  authService.refreshKey(uTokenCache),
+            rand =  authService.refreshKey(utokenCache),
             lifetime = LIFETIME.toMillis()
         )
     }

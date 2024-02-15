@@ -21,7 +21,7 @@ const val BYTE_SIZE = 8
 
 @Singleton
 class AuthService {
-    private val uTokenCache = Caffeine.newBuilder()
+    private val utokenCache = Caffeine.newBuilder()
         .expireAfterWrite(LIFETIME)
         .build<String, UTokenCacheData>()
 
@@ -44,40 +44,40 @@ class AuthService {
     }
 
     /**
-     * @return (uToken, timestamp)
+     * @return (utoken, timestamp)
      */
     fun generateUToken(id: Long, userTimestamp: Long):Pair<String, Long> {
         var flag = true
-        var uToken = ""
+        var utoken = ""
         var serverTimestamp: Long = 0
         while (flag) {
             serverTimestamp = System.currentTimeMillis()
-            uToken = Base64
+            utoken = Base64
                 .getEncoder()
                 .encodeToString(
                     ByteBuffer.allocate(java.lang.Long.BYTES)
                         .putLong(id + serverTimestamp)
                         .array())
-            flag =  uTokenCache.getIfPresent(uToken) != null
+            flag =  utokenCache.getIfPresent(utoken) != null
         }
         val key = serverTimestamp + userTimestamp
         val keySpec = generateSecretKeySpec(key.toString())
-        uTokenCache.put(uToken, UTokenCacheData(id, LIFETIME.toMillis(), key, keySpec))
-        return Pair(uToken, serverTimestamp)
+        utokenCache.put(utoken, UTokenCacheData(id, LIFETIME.toMillis(), key, keySpec))
+        return Pair(utoken, serverTimestamp)
     }
 
-    fun findUTokenCacheDataOrNull(uToken: String): UTokenCacheData? = uTokenCache.getIfPresent(uToken)
+    fun findUTokenCacheDataOrNull(utoken: String): UTokenCacheData? = utokenCache.getIfPresent(utoken)
 
-    fun refreshKey(uTokenCacheData: UTokenCacheData): Int {
-        var key = uTokenCacheData.key
+    fun refreshKey(utokenCacheData: UTokenCacheData): Int {
+        var key = utokenCacheData.key
         val rand = random.nextInt(100)
         if (isOdd(key % rand % 2)) {
             key += rand
         } else {
             key -= rand
         }
-        uTokenCacheData.key = key
-        uTokenCacheData.keySpec = generateSecretKeySpec(key.toString())
+        utokenCacheData.key = key
+        utokenCacheData.keySpec = generateSecretKeySpec(key.toString())
         return rand
     }
 

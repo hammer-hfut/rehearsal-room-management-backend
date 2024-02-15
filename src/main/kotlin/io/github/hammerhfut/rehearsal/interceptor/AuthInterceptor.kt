@@ -21,7 +21,7 @@ import jakarta.ws.rs.ext.Provider
  */
 
 // 如果为 [true] 则跳过token和url认证
-const val DEBUG_MODE = true
+const val DEBUG_MODE = false
 const val LOGIN_API_PATH = "/auth/login"
 
 @Priority(Interceptor.Priority.PLATFORM_BEFORE + 1)
@@ -33,25 +33,25 @@ class AuthInterceptor(
 ): ContainerRequestFilter {
 
     override fun filter(p0: ContainerRequestContext?) {
-        println("[auth-check]")
         if (DEBUG_MODE) return
 
-        val token = header.getHeaderString(HEADER_AUTHORIZATION)
-            ?: throw badResponse
-        val (uToken, encryptedUrl) = splitToken(token)
-
         val path = uriInfo.path
-        if (path != LOGIN_API_PATH && !checkUrl(uToken, encryptedUrl, path)) {
+        if (path != LOGIN_API_PATH) {
             // 除了 [login] 都需要校验url合法性
-             throw badResponse
+            val token = header.getHeaderString(HEADER_AUTHORIZATION)
+                ?: throw badResponse
+            val (utoken, encryptedUrl) = splitToken(token)
+            if (!checkUrl(utoken, encryptedUrl, path)) {
+                throw badResponse
+            }
         }
     }
 
-    private fun checkUrl(uToken: String, token: String, url: String): Boolean {
-        val uTokenCache = authService.findUTokenCacheDataOrNull(uToken)
+    private fun checkUrl(utoken: String, token: String, url: String): Boolean {
+        val utokenCache = authService.findUTokenCacheDataOrNull(utoken)
             ?: throw BusinessError(ErrorCode.NOT_FOUND)
         // TODO 检测是否过期
-        val decryptedUrl = aesDecrypt(token, uTokenCache.keySpec)
+        val decryptedUrl = aesDecrypt(token, utokenCache.keySpec)
         return  (decryptedUrl == url)
     }
 

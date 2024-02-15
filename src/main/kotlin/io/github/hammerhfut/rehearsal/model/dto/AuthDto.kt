@@ -12,7 +12,7 @@ data class LoginData(
 )
 
 data class LoginResponse(
-    val uToken: String,
+    val utoken: String,
     val lifetime: Long,
     val timestamp: Long
 )
