@@ -47,7 +47,9 @@ create table if not exists band
     name      text   not null,
     leader_id bigint not null
         constraint band_t_user_id_fk
-            references t_user
+            references t_user,
+    constraint band_name_leader_unique
+        unique (name, leader_id)
 );
 
 alter table band
@@ -259,11 +261,44 @@ VALUES
 
 INSERT INTO "public"."role" ("id", "name", "remark", "editable", "upper_role_id")
 VALUES
-    (1, 'admin', 'sys', false, null),
+    (1, 'admin', 'admin', false, null),
     (2, 'ann', '', false, null),
-    (3, 'sys', '', false, 1),
+    (3, 'sys', 'this Is Sys', false, 1),
     (4, 'app', '', false, 1),
     (5, 'hrm', '', false, 1),
-    (6, 'pwd', '', false, 3)
+    (6, 'pwd', '', false, 3),
+    (7, 'leader', '', false, null),
+    (8, 'teacher', '', false, null),
+    (9, 'super', '', false, null)
     ON conflict(name)
+    DO NOTHING;
+
+INSERT INTO "public"."united_role" ("role_id", "child_role_id")
+VALUES
+    (7, 4),
+    (7, 3),
+    (8, 5),
+    (8, 7),
+    (9, 1),
+    (9, 2)
+    ON conflict(role_id, child_role_id)
+    DO NOTHING;
+
+INSERT INTO "public"."band" ("id", "name", "leader_id")
+VALUES
+    (1, 'King Crimson', 1),
+    (2, 'Yes', 2),
+    (3, 'Pink Floyd', 3)
+    ON conflict(name, leader_id)
+    DO NOTHING;
+
+INSERT INTO "public"."user_role" ("user_id", "role_id", "band_id", "id")
+VALUES
+    (1, 9, null, 1),
+    (2, 7, null, 2),
+    (1, 7, 1, 3),
+    (3, 2, null, 4),
+    (3, 3, null, 5),
+    (3, 4, null, 6)
+    ON conflict(user_id, role_id, band_id)
     DO NOTHING;
