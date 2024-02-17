@@ -230,25 +230,25 @@ create table if not exists united_role
 alter table united_role
     owner to postgres;
 
-create table if not exists user_role
+create table if not exists user_role_band
 (
     user_id bigint not null
-        constraint user_role_t_user_id_fk
+        constraint user_role_band_t_user_id_fk
             references t_user,
     role_id bigint not null
-        constraint user_role_role_id_fk
+        constraint user_role_band_role_id_fk
             references role,
     band_id integer
-        constraint user_role_band_id_fk
+        constraint user_role_band_band_id_fk
             references band,
     id      bigserial
-        constraint user_role_pk
+        constraint user_role_band_pk
             primary key,
-    constraint user_role_pk_2
+    constraint user_role_band_pk_2
         unique (user_id, role_id, band_id)
 );
 
-alter table user_role
+alter table user_role_band
     owner to postgres;
 
 INSERT INTO "public"."t_user" ("username", "realname", "password", "create_time", "contact")
@@ -292,7 +292,7 @@ VALUES
     ON conflict(name, leader_id)
     DO NOTHING;
 
-INSERT INTO "public"."user_role" ("user_id", "role_id", "band_id", "id")
+INSERT INTO "public"."user_role_band" ("user_id", "role_id", "band_id", "id")
 VALUES
     (1, 9, null, 1),
     (2, 7, null, 2),
