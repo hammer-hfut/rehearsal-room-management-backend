@@ -42,4 +42,13 @@ interface User {
 
     @OneToMany(mappedBy = "receiver")
     val notices: List<LogNotice>
+
+    @OneToMany(mappedBy = "user")
+    val userRoleBands: List<UserRoleBand>
+
+    @ManyToManyView(
+        prop = "userRoleBands",
+        deeperProp = "role"
+    )
+    val roles: List<Role>
 }
