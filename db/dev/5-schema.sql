@@ -300,5 +300,5 @@ VALUES
     (3, 2, null, 4),
     (3, 3, null, 5),
     (3, 4, null, 6)
-    ON conflict(user_id, role_id, band_id)
+    ON conflict(id)
     DO NOTHING;
