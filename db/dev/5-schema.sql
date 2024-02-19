@@ -190,6 +190,20 @@ create table if not exists equipment_tag_mapping
 alter table equipment_tag_mapping
     owner to postgres;
 
+create table if not exists role_group
+(
+    name          text                 not null,
+    id            bigint               not null
+    constraint role_group_ky
+    primary key
+);
+
+create unique index if not exists role_group_name_uindex
+    on role_group (name);
+
+alter table role_group
+    owner to postgres;
+
 create table if not exists role
 (
     name          text                 not null,
@@ -197,20 +211,17 @@ create table if not exists role
     id            bigint               not null
         constraint role_ky
             primary key,
-    upper_role_id bigint
-        constraint role_role_id_fk
-            references role,
     editable      boolean default true not null,
-    constraint role_pk
-        unique (name, upper_role_id)
+    role_group_id      bigint               not null
+        constraint role_role_group_id_fk
+            references role_group
 );
 
-create unique index IF NOT EXISTS role_name_uindex
-    on role (name);
+create unique index IF NOT EXISTS role_name_role_group_id_uindex
+    on role (name, role_group_id);
+
 
 comment on column role.name is '英文的命名空间，如appoint';
-
-comment on column role.upper_role_id is '在点命名空间中的上级，譬如admin.appoint中的admin就是upper_role';
 
 alter table role
     owner to postgres;
@@ -259,29 +270,48 @@ VALUES
     ON conflict(username)
     DO NOTHING;
 
-INSERT INTO "public"."role" ("id", "name", "remark", "editable", "upper_role_id")
+INSERT INTO "public"."role_group" ("id", "name")
 VALUES
-    (1, 'admin', 'admin', false, null),
-    (2, 'ann', '', false, null),
-    (3, 'sys', 'this Is Sys', false, 1),
-    (4, 'app', '', false, 1),
-    (5, 'hrm', '', false, 1),
-    (6, 'pwd', '', false, 3),
-    (7, 'leader', '', false, null),
-    (8, 'teacher', '', false, null),
-    (9, 'super', '', false, null)
-    ON conflict(name)
+    (1, 'admin'),
+    (2, 'member'),
+    (3, 'other')
+    ON conflict(id)
+    DO NOTHING;
+
+INSERT INTO "public"."role" ("id", "name", "remark", "editable", "role_group_id")
+VALUES
+    (1, 'announcement', '', false, 1),
+    (2, 'hrm', 'this is hrm', false, 1),
+    (3, 'appointment', '', false, 1),
+    (4, 'equipment', '', false, 1),
+    (5, 'band', '', false, 1),
+    (6, 'place', '', false, 1),
+    (7, 'system', '', false, 1),
+    (8, 'room', '', false, 2),
+    (9, 'super admin', '', false, 3),
+    (10, 'leader', '', false, 3),
+    (11, 'union', '', false, 3)
+    ON conflict(name, role_group_id)
     DO NOTHING;
 
 INSERT INTO "public"."united_role" ("role_id", "child_role_id")
 VALUES
-    (7, 4),
-    (7, 3),
-    (8, 5),
-    (8, 7),
     (9, 1),
-    (9, 2)
-    ON conflict(role_id, child_role_id)
+    (9, 2),
+    (9, 3),
+    (9, 4),
+    (9, 5),
+    (9, 6),
+    (9, 7),
+    (9, 8),
+    (10, 1),
+    (10, 2),
+    (10, 3),
+    (10, 4),
+    (11, 10),
+    (11, 6),
+    (11, 7)
+ON conflict(role_id, child_role_id)
     DO NOTHING;
 
 INSERT INTO "public"."band" ("id", "name", "leader_id")
@@ -294,11 +324,11 @@ VALUES
 
 INSERT INTO "public"."user_role_band" ("user_id", "role_id", "band_id", "id")
 VALUES
-    (1, 9, null, 1),
-    (2, 7, null, 2),
-    (1, 7, 1, 3),
-    (3, 2, null, 4),
-    (3, 3, null, 5),
-    (3, 4, null, 6)
+    (1, 10, null, 1),
+    (2, 11, null, 2),
+    (1, 3, 1, 3),
+    (3, 9, null, 4),
+    (3, 5, null, 5),
+    (3, 6, null, 6)
     ON conflict(id)
     DO NOTHING;

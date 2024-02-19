@@ -1,0 +1,9 @@
+import io.quarkus.runtime.annotations.RegisterForReflection
+
+@RegisterForReflection
+GetAllRolesResponseElementDto {
+    id
+    name
+    remark
+    editable
+}

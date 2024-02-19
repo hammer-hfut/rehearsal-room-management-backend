@@ -5,7 +5,9 @@ import org.babyfish.jimmer.sql.Entity
 import org.babyfish.jimmer.sql.GeneratedValue
 import org.babyfish.jimmer.sql.GenerationType
 import org.babyfish.jimmer.sql.Id
+import org.babyfish.jimmer.sql.JoinTable
 import org.babyfish.jimmer.sql.Key
+import org.babyfish.jimmer.sql.ManyToMany
 import org.babyfish.jimmer.sql.ManyToManyView
 import org.babyfish.jimmer.sql.ManyToOne
 import org.babyfish.jimmer.sql.OneToMany
@@ -35,7 +37,15 @@ interface Role {
     val editable: Boolean
 
     @ManyToOne
+    @JoinTable(
+        name = "UNITED_ROLE",
+        joinColumnName = "CHILD_ROLE_ID",
+        inverseJoinColumnName = "ROLE_ID"
+    )
     val upperRole: Role?
+
+    @ManyToOne
+    val roleGroup: RoleGroup?
 
     @OneToMany(mappedBy = "upperRole")
     val children: List<Role>

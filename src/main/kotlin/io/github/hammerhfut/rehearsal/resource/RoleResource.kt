@@ -3,6 +3,8 @@ package io.github.hammerhfut.rehearsal.resource
 import io.github.hammerhfut.rehearsal.exception.BusinessError
 import io.github.hammerhfut.rehearsal.exception.ErrorCode
 import io.github.hammerhfut.rehearsal.model.db.*
+import io.github.hammerhfut.rehearsal.model.dto.GetAllRolesResponseElement
+import io.github.hammerhfut.rehearsal.service.sortRolesByGroup
 import io.smallrye.common.annotation.RunOnVirtualThread
 import jakarta.ws.rs.GET
 import jakarta.ws.rs.Path
@@ -21,18 +23,18 @@ class RoleResource(
 ) {
     @GET
     @RunOnVirtualThread
-    fun getAllRoles(): List<Role> {
+    fun getAllRoles(): List<GetAllRolesResponseElement>  {
         val list = sqlClient.createQuery(Role::class) {
             select(
                 table.fetchBy {
                     allScalarFields()
-                    `children*`{
-                        depth(0)
+                    roleGroup {
+                        name()
                     }
                 }
             )
         }.execute()
-        return list
+        return sortRolesByGroup(list)
     }
 
     @GET
@@ -45,7 +47,7 @@ class RoleResource(
                 table.fetchBy {
                     allScalarFields()
                     `children*`()
-                    upperRole()
+                    roleGroup()
                 }
             )
         }.fetchOneOrNull()
@@ -63,6 +65,10 @@ class RoleResource(
                     allScalarFields()
                     role{
                         allScalarFields()
+                        `children*`()
+                        roleGroup {
+                            name()
+                        }
                     }
                     band {
                         allScalarFields()
