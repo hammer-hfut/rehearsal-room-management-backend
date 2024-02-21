@@ -7,7 +7,6 @@ import org.babyfish.jimmer.sql.GenerationType
 import org.babyfish.jimmer.sql.Id
 import org.babyfish.jimmer.sql.JoinTable
 import org.babyfish.jimmer.sql.Key
-import org.babyfish.jimmer.sql.ManyToMany
 import org.babyfish.jimmer.sql.ManyToManyView
 import org.babyfish.jimmer.sql.ManyToOne
 import org.babyfish.jimmer.sql.OneToMany
@@ -22,25 +21,27 @@ import org.babyfish.jimmer.sql.OneToMany
         Role::class,
         RoleDraft::class,
         RoleDraft.`$`::class,
-    ]
+    ],
 )
 @Entity
 interface Role {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long
 
     @Key
     val name: String
 
     val remark: String
+
+    @Key
     val editable: Boolean
 
     @ManyToOne
     @JoinTable(
         name = "UNITED_ROLE",
         joinColumnName = "CHILD_ROLE_ID",
-        inverseJoinColumnName = "ROLE_ID"
+        inverseJoinColumnName = "ROLE_ID",
     )
     val upperRole: Role?
 
@@ -55,8 +56,7 @@ interface Role {
 
     @ManyToManyView(
         prop = "userRoleBands",
-        deeperProp = "user"
+        deeperProp = "user",
     )
     val users: List<User>
-
 }

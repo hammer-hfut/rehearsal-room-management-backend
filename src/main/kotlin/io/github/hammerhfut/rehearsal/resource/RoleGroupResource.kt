@@ -64,6 +64,7 @@ class RoleGroupResource(
         val affectedRowCount = sqlClient.createDelete(RoleGroup::class) {
             where(table.id eq id)
         }.execute()
+//        TODO 检测数量 删除
         if (affectedRowCount == 0)
             throw BusinessError(ErrorCode.NOT_FOUND)
     }

@@ -10,15 +10,21 @@ import org.babyfish.jimmer.sql.*
 @Entity
 interface UserRoleBand {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long
 
+    @Key
     @ManyToOne
-    val role: Role
-
-    @ManyToOne
+    @OnDissociate(DissociateAction.DELETE)
     val user: User
 
+    @Key
     @ManyToOne
+    @OnDissociate(DissociateAction.DELETE)
+    val role: Role
+
+    @Key
+    @ManyToOne
+    @OnDissociate(DissociateAction.DELETE)
     val band: Band?
 }
