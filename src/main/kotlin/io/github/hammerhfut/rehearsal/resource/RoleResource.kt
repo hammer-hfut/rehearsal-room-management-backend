@@ -113,26 +113,7 @@ class RoleResource(
     fun getRoleByUserId(
         @RestPath id: Long,
     ): List<UserRoleBand> {
-        val roles =
-            sqlClient.createQuery(UserRoleBand::class) {
-                where(table.userId eq id)
-                select(
-                    table.fetchBy {
-                        allScalarFields()
-                        role {
-                            allScalarFields()
-                            `children*`()
-                            roleGroup {
-                                name()
-                            }
-                        }
-                        band {
-                            allScalarFields()
-                        }
-                    },
-                )
-            }.execute()
-        return roles
+        return roleService.getRoleByUserId(id)
     }
 
     @PUT

@@ -8,6 +8,8 @@ import io.github.hammerhfut.rehearsal.model.dto.GetAllRolesResponseElement
 import io.github.hammerhfut.rehearsal.model.dto.RoleBand
 import jakarta.inject.Singleton
 import org.babyfish.jimmer.kt.new
+import org.babyfish.jimmer.sql.kt.KSqlClient
+import org.babyfish.jimmer.sql.kt.ast.expression.eq
 
 /**
  *@author prixii
@@ -15,7 +17,9 @@ import org.babyfish.jimmer.kt.new
  */
 
 @Singleton
-class RoleService {
+class RoleService(
+    private val sqlClient: KSqlClient,
+) {
     fun sortRolesByGroup(rolesWithGroup: List<Role>): List<GetAllRolesResponseElement> {
         val sortedRoles = mutableListOf<GetAllRolesResponseElement>()
         rolesWithGroup.forEach {
@@ -56,5 +60,26 @@ class RoleService {
                 }
             }
         }
+    }
+
+    fun getRoleByUserId(id: Long): List<UserRoleBand> {
+        return sqlClient.createQuery(UserRoleBand::class) {
+            where(table.userId eq id)
+            select(
+                table.fetchBy {
+                    allScalarFields()
+                    role {
+                        allScalarFields()
+                        `children*`()
+                        roleGroup {
+                            name()
+                        }
+                    }
+                    band {
+                        allScalarFields()
+                    }
+                },
+            )
+        }.execute()
     }
 }
