@@ -22,13 +22,12 @@ import javax.crypto.spec.SecretKeySpec
 
 @QuarkusTest
 @TestMethodOrder(OrderAnnotation::class)
-open class AuthResourceTest(
-    private val objectMapper: ObjectMapper,
-) {
+open class AuthResourceTest {
+    private val objectMapper = ObjectMapper()
     var key: Long = 0
     var utoken: String = ""
     lateinit var keySpec: SecretKeySpec
-    val logger = Logger.getLogger("[auth-test]")
+    val logger: Logger = Logger.getLogger("[auth-test]")
 
     @Test
     fun testAuth() {
