@@ -208,7 +208,7 @@ create table if not exists role
 (
     name          text                 not null,
     remark        text                 not null,
-    id            bigint               not null
+    id            serial               not null
         constraint role_ky
             primary key,
     editable      boolean default true not null,
@@ -278,19 +278,19 @@ VALUES
     ON conflict(id)
     DO NOTHING;
 
-INSERT INTO "public"."role" ("id", "name", "remark", "editable", "role_group_id")
+INSERT INTO "public"."role" ("name", "remark", "editable", "role_group_id")
 VALUES
-    (1, 'announcement', '', false, 1),
-    (2, 'hrm', 'this is hrm', false, 1),
-    (3, 'appointment', '', false, 1),
-    (4, 'equipment', '', false, 1),
-    (5, 'band', '', false, 1),
-    (6, 'place', '', false, 1),
-    (7, 'system', '', false, 1),
-    (8, 'room', '', false, 2),
-    (9, 'super admin', '', false, 3),
-    (10, 'leader', '', false, 3),
-    (11, 'union', '', false, 3)
+    ('announcement', '', false, 1),
+    ('hrm', 'this is hrm', false, 1),
+    ('appointment', '', false, 1),
+    ('equipment', '', false, 1),
+    ('band', '', false, 1),
+    ('place', '', false, 1),
+    ('system', '', false, 1),
+    ('room', '', false, 2),
+    ('super admin', '', false, 3),
+    ('leader', '', false, 3),
+    ('union', '', false, 3)
     ON conflict(name, role_group_id)
     DO NOTHING;
 
@@ -322,13 +322,13 @@ VALUES
     ON conflict(name, leader_id)
     DO NOTHING;
 
-INSERT INTO "public"."user_role_band" ("user_id", "role_id", "band_id", "id")
+INSERT INTO "public"."user_role_band" ("user_id", "role_id", "band_id")
 VALUES
-    (1, 10, null, 1),
-    (2, 11, null, 2),
-    (1, 3, 1, 3),
-    (3, 9, null, 4),
-    (3, 5, null, 5),
-    (3, 6, null, 6)
+    (1, 10, null),
+    (2, 11, null),
+    (1, 3, 1),
+    (3, 9, null),
+    (3, 5, null),
+    (3, 6, null)
     ON conflict(id)
     DO NOTHING;
