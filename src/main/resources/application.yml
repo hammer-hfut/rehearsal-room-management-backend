@@ -5,7 +5,7 @@ quarkus:
   http:
     port: 16458
     enable-compression: true
-  cache:
-    caffeine:
-      "maij-token-policy":
-        maximum-size: 100
+
+app-config:
+  debug: true # 如果为 [true] 则跳过token和url认证
+  login-api-path: "/auth/login"

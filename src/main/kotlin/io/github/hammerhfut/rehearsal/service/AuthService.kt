@@ -76,7 +76,7 @@ class AuthService {
         return Pair(utoken, serverTimestamp)
     }
 
-    fun findUTokenCacheDataOrNull(utoken: String): UtokenCacheData? = utokenCache.getIfPresent(utoken)
+    fun findUtokenCacheDataOrNull(utoken: String): UtokenCacheData? = utokenCache.getIfPresent(utoken)
 
     fun refreshKey(utokenCacheData: UtokenCacheData): Int {
         var key = utokenCacheData.key

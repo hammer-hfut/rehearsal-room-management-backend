@@ -72,7 +72,7 @@ class AuthResource(
         @HeaderParam(AuthInterceptor.HEADER_AUTHORIZATION) token: String,
     ): RefreshKeyResponse {
         val utokenCache =
-            authService.findUTokenCacheDataOrNull(splitToken(token).first)
+            authService.findUtokenCacheDataOrNull(splitToken(token).first)
                 ?.takeIf { it.key == key }
                 ?: throw BusinessError(ErrorCode.NOT_FOUND)
         return RefreshKeyResponse(
