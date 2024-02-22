@@ -31,34 +31,35 @@ import org.mindrot.jbcrypt.BCrypt
 @Path("/auth")
 class AuthResource(
     private val sqlClient: KSqlClient,
-    private val authService: AuthService
+    private val authService: AuthService,
 ) {
     @POST
     @Path("/login")
     @RunOnVirtualThread
     fun login(input: LoginData): LoginResponse {
-        val user = sqlClient.createQuery(User::class) {
-            where(table.username.eq(input.username))
-            select(
-                table.fetchBy {
-                    allScalarFields()
-                }
-            )
-        }.fetchOneOrNull()
-            ?.takeIf {BCrypt.checkpw(input.password, it.password)}
-            ?: throw BusinessError(ErrorCode.FORBIDDEN ) // TODO 异常处理
-        val utokenResult= authService.generateUToken(user.id, input.timestamp)
+        val user =
+            sqlClient.createQuery(User::class) {
+                where(table.username.eq(input.username))
+                select(
+                    table.fetchBy {
+                        allScalarFields()
+                    },
+                )
+            }.fetchOneOrNull()
+                ?.takeIf { BCrypt.checkpw(input.password, it.password) }
+                ?: throw BusinessError(ErrorCode.FORBIDDEN) // TODO 异常处理
+        val (utoken, timestamp) = authService.generateUtoken(user.id, input.timestamp)
         return LoginResponse(
-            utoken =  utokenResult.first,
-            lifetime =  LIFETIME.toMillis(),
-            timestamp =  utokenResult.second
+            utoken = utoken,
+            lifetime = LIFETIME.toMillis(),
+            timestamp = timestamp,
         )
     }
 
     @GET
     @Path("/test-token")
     @RunOnVirtualThread
-    fun testToken():String {
+    fun testToken(): String {
         val testMsg = "test token"
         return testMsg
     }
@@ -66,13 +67,17 @@ class AuthResource(
     @PUT
     @Path("/refresh/{key}")
     @RunOnVirtualThread
-    fun refreshKey(@RestPath key: Long, @HeaderParam(AuthInterceptor.HEADER_AUTHORIZATION) token: String): RefreshKeyResponse {
-        val utokenCache = authService.findUTokenCacheDataOrNull(splitToken(token).first)
-            ?.takeIf { it.key == key  }
-            ?: throw BusinessError(ErrorCode.NOT_FOUND)
+    fun refreshKey(
+        @RestPath key: Long,
+        @HeaderParam(AuthInterceptor.HEADER_AUTHORIZATION) token: String,
+    ): RefreshKeyResponse {
+        val utokenCache =
+            authService.findUTokenCacheDataOrNull(splitToken(token).first)
+                ?.takeIf { it.key == key }
+                ?: throw BusinessError(ErrorCode.NOT_FOUND)
         return RefreshKeyResponse(
-            rand =  authService.refreshKey(utokenCache),
-            lifetime = LIFETIME.toMillis()
+            rand = authService.refreshKey(utokenCache),
+            lifetime = LIFETIME.toMillis(),
         )
     }
 }

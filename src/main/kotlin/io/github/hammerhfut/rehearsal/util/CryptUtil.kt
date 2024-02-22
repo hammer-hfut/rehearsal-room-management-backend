@@ -17,7 +17,10 @@ const val CIPHER_INSTANCE_NAME = "AES/ECB/PKCS5Padding"
 const val CRYPT_ALGORITHM = "AES"
 const val FILL_CHARACTER = 'X'
 
-fun aesDecrypt(encryptedText: String, secretKeySpec: SecretKeySpec): String {
+fun aesDecrypt(
+    encryptedText: String,
+    secretKeySpec: SecretKeySpec,
+): String {
     val cipher = Cipher.getInstance(CIPHER_INSTANCE_NAME)
     cipher.init(Cipher.DECRYPT_MODE, secretKeySpec)
     val decodedBytes = Base64.getDecoder().decode(encryptedText)
@@ -25,18 +28,18 @@ fun aesDecrypt(encryptedText: String, secretKeySpec: SecretKeySpec): String {
     return String(decryptedBytes)
 }
 
-fun aesEncrypt(rawUrl: String, keySpec: SecretKeySpec): String {
+fun aesEncrypt(
+    rawUrl: String,
+    keySpec: SecretKeySpec,
+): String {
     val cipher = Cipher.getInstance(CIPHER_INSTANCE_NAME)
     cipher.init(Cipher.ENCRYPT_MODE, keySpec)
     val encryptedBytes = cipher.doFinal(rawUrl.toByteArray(StandardCharsets.UTF_8))
     return Base64.getEncoder().encodeToString(encryptedBytes)
 }
 
-/**
- * [key]: Long直接 toString 就行了
- */
-fun generateSecretKeySpec(key: String): SecretKeySpec {
-    val aesKey = key.padStart(AES_KEY_LENGTH, FILL_CHARACTER)
+fun generateSecretKeySpec(key: Long): SecretKeySpec {
+    val aesKey = key.toString().padStart(AES_KEY_LENGTH, FILL_CHARACTER)
     return SecretKeySpec(aesKey.toByteArray(), CRYPT_ALGORITHM)
 }
 

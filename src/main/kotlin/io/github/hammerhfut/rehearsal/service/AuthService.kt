@@ -1,11 +1,12 @@
+@file:Suppress("ktlint:standard:no-wildcard-imports")
+
 package io.github.hammerhfut.rehearsal.service
 
 import com.github.benmanes.caffeine.cache.Caffeine
-import io.github.hammerhfut.rehearsal.model.UTokenCacheData
+import io.github.hammerhfut.rehearsal.model.UtokenCacheData
 import io.github.hammerhfut.rehearsal.util.generateSecretKeySpec
 import jakarta.inject.Singleton
 import java.nio.ByteBuffer
-import java.security.Key
 import java.util.*
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.toJavaDuration
@@ -18,23 +19,27 @@ import kotlin.time.toJavaDuration
 val LIFETIME = 1.hours.toJavaDuration()
 const val MAX_NUM: Long = 0xff
 const val BYTE_SIZE = 8
+const val RAND_KEY_RANGE = 100
 
 @Singleton
 class AuthService {
-    private val utokenCache = Caffeine.newBuilder()
-        .expireAfterWrite(LIFETIME)
-        .build<String, UTokenCacheData>()
+    private val utokenCache =
+        Caffeine.newBuilder()
+            .expireAfterWrite(LIFETIME)
+            .build<String, UtokenCacheData>()
 
     private val random = Random()
 
-    fun decodeUid(uid: String, timestamp: Long): Long {
+    fun decodeUid(
+        uid: String,
+        timestamp: Long,
+    ): Long {
         val byteArray = Base64.getDecoder().decode(uid)
         val username = byteArrayToLong(byteArray) - timestamp
         return username
     }
 
     private fun byteArrayToLong(byteArray: ByteArray): Long {
-
         var value: Long = 0
         for (i in byteArray.indices) {
             value = value shl BYTE_SIZE
@@ -46,38 +51,43 @@ class AuthService {
     /**
      * @return (utoken, timestamp)
      */
-    fun generateUToken(id: Long, userTimestamp: Long):Pair<String, Long> {
+    fun generateUtoken(
+        id: Long,
+        userTimestamp: Long,
+    ): Pair<String, Long> {
         var flag = true
         var utoken = ""
         var serverTimestamp: Long = 0
         while (flag) {
             serverTimestamp = System.currentTimeMillis()
-            utoken = Base64
-                .getEncoder()
-                .encodeToString(
-                    ByteBuffer.allocate(java.lang.Long.BYTES)
-                        .putLong(id + serverTimestamp)
-                        .array())
-            flag =  utokenCache.getIfPresent(utoken) != null
+            utoken =
+                Base64
+                    .getEncoder()
+                    .encodeToString(
+                        ByteBuffer.allocate(java.lang.Long.BYTES)
+                            .putLong(id + serverTimestamp)
+                            .array(),
+                    )
+            flag = utokenCache.getIfPresent(utoken) != null
         }
         val key = serverTimestamp + userTimestamp
-        val keySpec = generateSecretKeySpec(key.toString())
-        utokenCache.put(utoken, UTokenCacheData(id, LIFETIME.toMillis(), key, keySpec))
+        val keySpec = generateSecretKeySpec(key)
+        utokenCache.put(utoken, UtokenCacheData(id, LIFETIME.toMillis(), key, keySpec))
         return Pair(utoken, serverTimestamp)
     }
 
-    fun findUTokenCacheDataOrNull(utoken: String): UTokenCacheData? = utokenCache.getIfPresent(utoken)
+    fun findUTokenCacheDataOrNull(utoken: String): UtokenCacheData? = utokenCache.getIfPresent(utoken)
 
-    fun refreshKey(utokenCacheData: UTokenCacheData): Int {
+    fun refreshKey(utokenCacheData: UtokenCacheData): Int {
         var key = utokenCacheData.key
-        val rand = random.nextInt(100)
+        val rand = random.nextInt(RAND_KEY_RANGE)
         if (isOdd(key % rand % 2)) {
             key += rand
         } else {
             key -= rand
         }
         utokenCacheData.key = key
-        utokenCacheData.keySpec = generateSecretKeySpec(key.toString())
+        utokenCacheData.keySpec = generateSecretKeySpec(key)
         return rand
     }
 

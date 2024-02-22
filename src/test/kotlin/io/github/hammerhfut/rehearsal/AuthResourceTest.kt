@@ -9,6 +9,7 @@ import io.quarkus.test.junit.QuarkusTest
 import io.restassured.RestAssured.given
 import jakarta.ws.rs.core.MediaType
 import org.hamcrest.core.Is.`is`
+import org.jboss.logging.Logger
 import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestMethodOrder
@@ -21,11 +22,13 @@ import javax.crypto.spec.SecretKeySpec
 
 @QuarkusTest
 @TestMethodOrder(OrderAnnotation::class)
-open class AuthResourceTest {
-    val objectMapper = ObjectMapper()
+open class AuthResourceTest(
+    private val objectMapper: ObjectMapper,
+) {
     var key: Long = 0
     var utoken: String = ""
     lateinit var keySpec: SecretKeySpec
+    val logger = Logger.getLogger("[auth-test]")
 
     @Test
     fun testAuth() {
@@ -36,34 +39,33 @@ open class AuthResourceTest {
 
     fun testLogin() {
         val userTimestamp = System.currentTimeMillis()
-        val loginData = LoginData(
-            username = "s114514",
-            timestamp = userTimestamp,
-            password = "5569deedc5689d7bd106ed9411e7d5fea81540417a8ec9b23b4d1430d28c832a"
-        )
-        val loginResponse = given()
-            .contentType(MediaType.APPLICATION_JSON)
-            .body(objectMapper.writeValueAsString(loginData))
-            .`when`().post("/auth/login")
-            .then()
-            .statusCode(200)
-            .extract().response().jsonPath()
+        val loginData =
+            LoginData(
+                username = "s114514",
+                timestamp = userTimestamp,
+                password = "5569deedc5689d7bd106ed9411e7d5fea81540417a8ec9b23b4d1430d28c832a",
+            )
+        val loginResponse =
+            given()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(objectMapper.writeValueAsString(loginData))
+                .`when`().post("/auth/login")
+                .then()
+                .statusCode(200)
+                .extract().response().jsonPath()
         key = loginResponse.getLong("timestamp") + userTimestamp
-        println("[key]: $key")
-        keySpec = generateSecretKeySpec(key.toString())
+        logger.debug("[key]: $key")
+        keySpec = generateSecretKeySpec(key)
         utoken = loginResponse.getString("utoken")
-        println("[utoken]: $utoken")
+        logger.debug("[utoken]: $utoken")
     }
 
     fun testToken() {
-        println("[key!]: $key")
-        println("[utoken!]: $utoken")
-
         val msgExpected = "test token"
         val targetPath = "/auth/test-token"
         val urlToken = aesEncrypt(targetPath, keySpec)
         val token = generateToken(urlToken)
-        println("[token]: $token")
+        logger.debug("[token]: $token")
         given()
             .header(AuthInterceptor.HEADER_AUTHORIZATION, token)
             .`when`()
