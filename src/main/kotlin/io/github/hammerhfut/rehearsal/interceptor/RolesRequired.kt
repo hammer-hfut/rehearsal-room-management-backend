@@ -1,10 +1,13 @@
+@file:Suppress("ktlint:standard:no-wildcard-imports")
+
 package io.github.hammerhfut.rehearsal.interceptor
 
 import io.github.hammerhfut.rehearsal.exception.BusinessError
 import io.github.hammerhfut.rehearsal.exception.ErrorCode
+import io.github.hammerhfut.rehearsal.model.BasicRoles
+import io.github.hammerhfut.rehearsal.model.db.Band
 import io.github.hammerhfut.rehearsal.model.db.Role
 import io.github.hammerhfut.rehearsal.model.db.UserRoleBand
-import io.github.hammerhfut.rehearsal.resource.AuthResource
 import io.github.hammerhfut.rehearsal.service.AuthService
 import io.github.hammerhfut.rehearsal.service.RoleService
 import io.github.hammerhfut.rehearsal.util.splitToken
@@ -14,39 +17,47 @@ import jakarta.interceptor.AroundInvoke
 import jakarta.interceptor.Interceptor
 import jakarta.interceptor.InterceptorBinding
 import jakarta.interceptor.InvocationContext
-import jakarta.ws.rs.Path
 import jakarta.ws.rs.core.HttpHeaders
-import jakarta.ws.rs.core.UriInfo
 import org.jboss.logging.Logger
 import java.lang.annotation.Inherited
-import java.lang.reflect.Method
+import java.util.*
+import kotlin.reflect.full.findAnnotations
+import kotlin.reflect.jvm.kotlinFunction
 
 /**
- * [roles] role的name的list, 若用户拥有这些role中的任何一个，就可以访问该接口
+ * [roles] BasicRoles的list, 若用户拥有这些role中的任何一个，就可以访问该接口
  *
  * [requireBand] 为 true 时, 用户需要拥有对应 band 的权限才能访问该接口
  *
- * e.g.: @RolesRequired(["hrm", "appoint"]), 用户只要拥有 hrm 或 appoint 中的任何一个就可以访问该接口
+ * e.g.: @RolesRequired([BasicRoles.HRM, BasicRoles.APPOINTMENT]), 用户只要拥有 hrm 或 appoint 中的任何一个就可以访问该接口
  *
+ * 如果需要使用 [requireBand] ，务必通过json object携带bandId, 并将bandId放在根上
+ *
+ *     // GOOD
+ *       "data": {
+ *         "bandId": 123
+ *       }
+ *
+ *     // BAD
+ *       "data": 123
  */
 @Target(AnnotationTarget.FUNCTION, AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
 @InterceptorBinding
 @Inherited
 annotation class RolesRequired(
-    @get:Nonbinding val roles: Array<String>,
+    @get:Nonbinding val roles: Array<BasicRoles>,
     @get:Nonbinding val requireBand: Boolean = false,
 )
 
 @Interceptor
-@RolesRequired(roles = ["role1", "role2"])
+@RolesRequired(roles = [BasicRoles.HRM, BasicRoles.BAND])
 @Priority(Interceptor.Priority.PLATFORM_BEFORE + 1)
 @Suppress("MISSING_DEPENDENCY_CLASS")
 class RolesRequiredInterceptor(
     private val header: HttpHeaders,
     private val authService: AuthService,
     private val roleService: RoleService,
-    private val apiInfo: UriInfo,
 ) {
     private val logger = Logger.getLogger("RolesRequiredLogger")
 
@@ -54,29 +65,32 @@ class RolesRequiredInterceptor(
     fun intercept(context: InvocationContext): Any? {
         val token = header.getHeaderString(AuthInterceptor.HEADER_AUTHORIZATION)
         val (utoken, _) = splitToken(token)
-        val path: String = apiInfo.path
-        val annotation =
-            findMethodByRoutePath(path)?.getAnnotation(RolesRequired::class.java)
-                ?: return BusinessError(ErrorCode.NOT_FOUND)
-        val rolesRequired = annotation.roles
-        logger.info("[band]: ${annotation.requireBand}")
-        val targetBandId = 0L
+        val (rolesRequired, requireBand) = getAnnotationInfo(context)
+
+        val targetBandId: Long? =
+            if (requireBand) {
+                getBandId(context)
+            } else {
+                null
+            }
         // TODO 缓存获取 role
-        checkRole(getRolesByUtoken(utoken), rolesRequired, targetBandId)
+        checkRole(getRolesByUtoken(utoken), rolesRequired, targetBandId).let {
+            if (!it) {
+                throw BusinessError(ErrorCode.NOT_FOUND)
+            }
+        }
         return context.proceed()
     }
 
-    private fun findMethodByRoutePath(path: String): Method? {
-        val resourceClass = AuthResource::class.java
-        val pathPrefix = resourceClass.getAnnotation(Path::class.java).value
-        val methods = resourceClass.methods
-        for (method in methods) {
-            val route = method.getAnnotation(Path::class.java)
-            if (route != null && "$pathPrefix${route.value}" == path) {
-                return method
-            }
+    private fun getAnnotationInfo(context: InvocationContext): Pair<Array<String>, Boolean> {
+        val annotation =
+            context.method.kotlinFunction?.findAnnotations(RolesRequired::class)?.get(0)
+                ?: throw BusinessError(ErrorCode.NOT_FOUND)
+        val stringRoles = mutableListOf<String>()
+        annotation.roles.forEach {
+            stringRoles.addLast(it.toString().lowercase(Locale.getDefault()))
         }
-        return null
+        return Pair(stringRoles.toTypedArray<String>(), annotation.requireBand)
     }
 
     private fun getRolesByUtoken(utoken: String): List<UserRoleBand> {
@@ -90,9 +104,10 @@ class RolesRequiredInterceptor(
         targetBandId: Long?,
     ): Boolean {
         for (roleMapping in roleMappings) {
-            for (child in roleMapping.role.children) {
-                if (checkChild(child, targetRolesName)) {
-                    logger.info("find it!")
+            if (checkChild(roleMapping.role, targetRolesName)) {
+                logger.info("find it!")
+                if (checkBand(roleMapping.band, targetBandId)) {
+                    logger.info("also does band!")
                     return true
                 }
             }
@@ -104,7 +119,6 @@ class RolesRequiredInterceptor(
         role: Role,
         targetRolesName: Array<String>,
     ): Boolean {
-        logger.info("[check]: $role")
         if (role.children.isEmpty()) {
             return (targetRolesName.contains(role.name))
         }
@@ -116,5 +130,21 @@ class RolesRequiredInterceptor(
             }
         }
         return result
+    }
+
+    private fun getBandId(context: InvocationContext): Long? {
+        val bandId = context.parameters[0].javaClass.declaredFields.firstOrNull { it.name == "bandId" }
+        bandId?.isAccessible = true
+        return bandId?.get(context.parameters[0]) as Long?
+    }
+
+    private fun checkBand(
+        band: Band?,
+        targetBandId: Long?,
+    ): Boolean {
+        if (targetBandId == null) return true
+        // 有 targetBandId 说明需要判定乐队
+        if (band == null) return false
+        return (band.id == targetBandId)
     }
 }
