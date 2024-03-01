@@ -27,19 +27,21 @@ import kotlin.reflect.jvm.kotlinFunction
 /**
  * [roles] BasicRoles的list, 若用户拥有这些role中的任何一个，就可以访问该接口
  *
- * [requireBand] 为 true 时, 用户需要拥有对应 band 的权限才能访问该接口
+ * [requireBand] 为 `true` 时, 用户需要拥有对应 band 的权限才能访问该接口
  *
- * e.g.: @RolesRequired([BasicRoles.HRM, BasicRoles.APPOINTMENT]), 用户只要拥有 hrm 或 appoint 中的任何一个就可以访问该接口
+ * **e.g.**: `@RolesRequired([BasicRoles.HRM, BasicRoles.APPOINTMENT])`, 用户只要拥有 hrm 或 appoint 中的任何一个就可以访问该接口
  *
  * 如果需要使用 [requireBand] ，务必通过json object携带bandId, 并将bandId放在根上
  *
- *     // GOOD
- *       "data": {
- *         "bandId": 123
- *       }
+ * ```
+ * // GOOD
+ * "data": {
+ *   "bandId": 123
+ * }
  *
- *     // BAD
- *       "data": 123
+ * // BAD
+ * "data": 123
+ * ```
  */
 @Target(AnnotationTarget.FUNCTION, AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)

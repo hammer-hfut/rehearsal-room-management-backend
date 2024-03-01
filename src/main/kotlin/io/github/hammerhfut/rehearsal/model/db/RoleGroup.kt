@@ -1,9 +1,6 @@
 package io.github.hammerhfut.rehearsal.model.db
 
-import org.babyfish.jimmer.sql.Entity
-import org.babyfish.jimmer.sql.GeneratedValue
-import org.babyfish.jimmer.sql.GenerationType
-import org.babyfish.jimmer.sql.Id
+import org.babyfish.jimmer.sql.*
 
 /**
  *@author prixii
@@ -16,5 +13,6 @@ interface RoleGroup {
     @GeneratedValue(strategy = GenerationType.AUTO)
     val id: Long
 
+    @Key
     val name: String
 }

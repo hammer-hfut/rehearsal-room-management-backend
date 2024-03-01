@@ -30,8 +30,8 @@ class RoleResource(
 ) {
     @GET
     @RunOnVirtualThread
-    fun getAllRoles(): List<GetAllRolesResponseElement> {
-        val list =
+    fun getAllRoles(): Set<GetAllRolesResponseElement> {
+        val roleSet =
             sqlClient.createQuery(Role::class) {
                 select(
                     table.fetchBy {
@@ -42,7 +42,7 @@ class RoleResource(
                     },
                 )
             }.execute()
-        return roleService.sortRolesByGroup(list)
+        return roleService.sortRolesByGroup(roleSet)
     }
 
     @GET
@@ -119,7 +119,7 @@ class RoleResource(
     @PUT
     @Path("/user")
     @RunOnVirtualThread
-    fun setUserRole(input: SetUserRoleData) {
+    fun setUserRoles(input: SetUserRolesData) {
         sqlClient.save(roleService.parseRoleBandsToUser(input.userId, input.roles))
     }
 }

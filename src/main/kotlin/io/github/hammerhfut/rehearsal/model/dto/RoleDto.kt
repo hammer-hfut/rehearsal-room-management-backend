@@ -21,7 +21,7 @@ data class GetAllRolesResponseElement(
         )
 }
 
-data class SetUserRoleData(
+data class SetUserRolesData(
     val roles: List<RoleBand>,
     val userId: Long,
 )

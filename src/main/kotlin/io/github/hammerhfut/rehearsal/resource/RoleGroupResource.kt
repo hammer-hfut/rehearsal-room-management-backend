@@ -23,7 +23,7 @@ import org.jboss.resteasy.reactive.RestPath
 
 @Path("/role-group")
 class RoleGroupResource(
-    private val sqlClient: KSqlClient
+    private val sqlClient: KSqlClient,
 ) {
     @POST
     @RunOnVirtualThread
@@ -38,7 +38,7 @@ class RoleGroupResource(
             select(
                 table.fetchBy {
                     allScalarFields()
-                }
+                },
             )
         }.execute()
     }
@@ -46,26 +46,32 @@ class RoleGroupResource(
     @PUT
     @RunOnVirtualThread
     fun renameRoleGroup(input: RoleGroup) {
-        val affectedRowCount = sqlClient.createUpdate(RoleGroup::class) {
-            set(
-                table.name,
-                input.name
-            )
-            where(table.id eq input.id)
-        }.execute()
-        if (affectedRowCount == 0)
+        val affectedRowCount =
+            sqlClient.createUpdate(RoleGroup::class) {
+                set(
+                    table.name,
+                    input.name,
+                )
+                where(table.id eq input.id)
+            }.execute()
+        if (affectedRowCount == 0) {
             throw BusinessError(ErrorCode.NOT_FOUND)
+        }
     }
 
     @DELETE
-    @Path(("/{id}"))
+    @Path("/{id}")
     @RunOnVirtualThread
-    fun removeRoleGroup(@RestPath id: Long) {
-        val affectedRowCount = sqlClient.createDelete(RoleGroup::class) {
-            where(table.id eq id)
-        }.execute()
+    fun removeRoleGroup(
+        @RestPath id: Long,
+    ) {
+        val affectedRowCount =
+            sqlClient.createDelete(RoleGroup::class) {
+                where(table.id eq id)
+            }.execute()
 //        TODO 检测数量 删除
-        if (affectedRowCount == 0)
+        if (affectedRowCount == 0) {
             throw BusinessError(ErrorCode.NOT_FOUND)
+        }
     }
 }

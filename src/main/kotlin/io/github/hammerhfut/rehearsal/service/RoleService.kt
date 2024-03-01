@@ -20,8 +20,8 @@ import org.babyfish.jimmer.sql.kt.ast.expression.eq
 class RoleService(
     private val sqlClient: KSqlClient,
 ) {
-    fun sortRolesByGroup(rolesWithGroup: List<Role>): List<GetAllRolesResponseElement> {
-        val sortedRoles = mutableListOf<GetAllRolesResponseElement>()
+    fun sortRolesByGroup(rolesWithGroup: List<Role>): Set<GetAllRolesResponseElement> {
+        val sortedRoles = mutableSetOf<GetAllRolesResponseElement>()
         rolesWithGroup.forEach {
             var found = false
             for (sortedRole in sortedRoles) {
@@ -32,14 +32,16 @@ class RoleService(
                 }
             }
             if (!found) {
-                sortedRoles.addLast(
-                    it.roleGroup?.let { it1 ->
-                        GetAllRolesResponseElement(
-                            it1,
-                            mutableListOf(GetAllRolesResponseElementDto(it)),
-                        )
-                    },
-                )
+                it.roleGroup?.let { it1 ->
+                    GetAllRolesResponseElement(
+                        it1,
+                        mutableListOf(GetAllRolesResponseElementDto(it)),
+                    )
+                }?.let { it2 ->
+                    sortedRoles.add(
+                        it2,
+                    )
+                }
             }
         }
         return sortedRoles
