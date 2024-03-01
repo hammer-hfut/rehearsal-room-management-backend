@@ -7,7 +7,7 @@ import javax.crypto.spec.SecretKeySpec
  *@date 2024/2/13 20:20
  */
 
-data class UtokenCacheData(
+data class UserInfoCache(
     val id: Long,
     val lifetime: Long,
     var key: Long,

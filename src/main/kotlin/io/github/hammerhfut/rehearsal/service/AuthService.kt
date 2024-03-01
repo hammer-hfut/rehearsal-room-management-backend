@@ -3,7 +3,7 @@
 package io.github.hammerhfut.rehearsal.service
 
 import com.github.benmanes.caffeine.cache.Caffeine
-import io.github.hammerhfut.rehearsal.model.UtokenCacheData
+import io.github.hammerhfut.rehearsal.model.UserInfoCache
 import io.github.hammerhfut.rehearsal.util.generateSecretKeySpec
 import jakarta.inject.Singleton
 import java.nio.ByteBuffer
@@ -17,8 +17,6 @@ import kotlin.time.toJavaDuration
  */
 
 val LIFETIME = 1.hours.toJavaDuration()
-const val MAX_NUM: Long = 0xff
-const val BYTE_SIZE = 8
 const val RAND_KEY_RANGE = 100
 
 @Singleton
@@ -26,27 +24,9 @@ class AuthService {
     private val utokenCache =
         Caffeine.newBuilder()
             .expireAfterWrite(LIFETIME)
-            .build<String, UtokenCacheData>()
+            .build<String, UserInfoCache>()
 
     private val random = Random()
-
-    fun decodeUid(
-        uid: String,
-        timestamp: Long,
-    ): Long {
-        val byteArray = Base64.getDecoder().decode(uid)
-        val username = byteArrayToLong(byteArray) - timestamp
-        return username
-    }
-
-    private fun byteArrayToLong(byteArray: ByteArray): Long {
-        var value: Long = 0
-        for (i in byteArray.indices) {
-            value = value shl BYTE_SIZE
-            value = value or (byteArray[i].toLong() and MAX_NUM)
-        }
-        return value
-    }
 
     /**
      * @return (utoken, timestamp)
@@ -72,22 +52,22 @@ class AuthService {
         }
         val key = serverTimestamp + userTimestamp
         val keySpec = generateSecretKeySpec(key)
-        utokenCache.put(utoken, UtokenCacheData(id, LIFETIME.toMillis(), key, keySpec))
+        utokenCache.put(utoken, UserInfoCache(id, LIFETIME.toMillis(), key, keySpec))
         return Pair(utoken, serverTimestamp)
     }
 
-    fun findUtokenCacheDataOrNull(utoken: String): UtokenCacheData? = utokenCache.getIfPresent(utoken)
+    fun findUtokenCacheDataOrNull(utoken: String): UserInfoCache? = utokenCache.getIfPresent(utoken)
 
-    fun refreshKey(utokenCacheData: UtokenCacheData): Int {
-        var key = utokenCacheData.key
+    fun refreshKey(userInfoCache: UserInfoCache): Int {
+        var key = userInfoCache.key
         val rand = random.nextInt(RAND_KEY_RANGE)
-        if (isOdd(key % rand % 2)) {
+        if (isOdd(key % rand)) {
             key += rand
         } else {
             key -= rand
         }
-        utokenCacheData.key = key
-        utokenCacheData.keySpec = generateSecretKeySpec(key)
+        userInfoCache.key = key
+        userInfoCache.keySpec = generateSecretKeySpec(key)
         return rand
     }
 

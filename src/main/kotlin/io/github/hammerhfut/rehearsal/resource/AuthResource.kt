@@ -3,14 +3,15 @@ package io.github.hammerhfut.rehearsal.resource
 import io.github.hammerhfut.rehearsal.exception.BusinessError
 import io.github.hammerhfut.rehearsal.exception.ErrorCode
 import io.github.hammerhfut.rehearsal.interceptor.AuthInterceptor
+import io.github.hammerhfut.rehearsal.interceptor.RolesRequired
+import io.github.hammerhfut.rehearsal.model.BasicRoles
 import io.github.hammerhfut.rehearsal.model.db.User
 import io.github.hammerhfut.rehearsal.model.db.fetchBy
 import io.github.hammerhfut.rehearsal.model.db.username
-import io.github.hammerhfut.rehearsal.model.dto.LoginData
-import io.github.hammerhfut.rehearsal.model.dto.LoginResponse
-import io.github.hammerhfut.rehearsal.model.dto.RefreshKeyResponse
+import io.github.hammerhfut.rehearsal.model.dto.*
 import io.github.hammerhfut.rehearsal.service.AuthService
 import io.github.hammerhfut.rehearsal.service.LIFETIME
+import io.github.hammerhfut.rehearsal.util.RoleUtil
 import io.github.hammerhfut.rehearsal.util.splitToken
 import io.smallrye.common.annotation.RunOnVirtualThread
 import jakarta.ws.rs.GET
@@ -20,6 +21,7 @@ import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
+import org.jboss.logging.Logger
 import org.jboss.resteasy.reactive.RestPath
 import org.mindrot.jbcrypt.BCrypt
 
@@ -32,7 +34,10 @@ import org.mindrot.jbcrypt.BCrypt
 class AuthResource(
     private val sqlClient: KSqlClient,
     private val authService: AuthService,
+    private val roleUtil: RoleUtil,
 ) {
+    private val logger = Logger.getLogger("Auth")
+
     @POST
     @Path("/login")
     @RunOnVirtualThread
@@ -49,20 +54,34 @@ class AuthResource(
                 ?.takeIf { BCrypt.checkpw(input.password, it.password) }
                 ?: throw BusinessError(ErrorCode.FORBIDDEN) // TODO 异常处理
         val (utoken, timestamp) = authService.generateUtoken(user.id, input.timestamp)
+        logger.info("[utoken]: $utoken")
+        val basicRoles = roleUtil.getRoleByUserId(user.id) ?: listOf()
         return LoginResponse(
             utoken = utoken,
             lifetime = LIFETIME.toMillis(),
             timestamp = timestamp,
+            user =
+                LoginUserResponse(
+                    realname = user.realname,
+                    roles = listOf(),
+                    basicRoles = basicRoles,
+                ),
         )
     }
 
     @GET
     @Path("/test-token")
     @RunOnVirtualThread
-    fun testToken(): String {
+    @RolesRequired(roles = [BasicRoles.APPOINTMENT, BasicRoles.EQUIPMENT], requireBand = true)
+    fun testToken(test: Test): String {
         val testMsg = "test token"
         return testMsg
     }
+
+    data class Test(
+        val str: String,
+        val bandId: Long,
+    )
 
     @PUT
     @Path("/refresh/{key}")

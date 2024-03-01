@@ -2,6 +2,7 @@ package io.github.hammerhfut.rehearsal.config
 
 import io.quarkus.runtime.annotations.StaticInitSafe
 import io.smallrye.config.ConfigMapping
+import io.smallrye.config.WithDefault
 
 /**
  *@author prixii
@@ -11,7 +12,17 @@ import io.smallrye.config.ConfigMapping
 @ConfigMapping(prefix = "app-config")
 @StaticInitSafe
 interface AppConfig {
+    @WithDefault("false")
     fun debug(): Boolean
 
+    @WithDefault("/auth/login")
     fun loginApiPath(): String
+
+    fun userCacheSize(): UserCacheSize
+
+    interface UserCacheSize {
+        fun data(): Long
+
+        fun role(): Long
+    }
 }
