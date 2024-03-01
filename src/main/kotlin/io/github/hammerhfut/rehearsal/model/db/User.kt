@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:no-wildcard-imports")
+
 package io.github.hammerhfut.rehearsal.model.db
 
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -10,7 +12,7 @@ import java.time.LocalDateTime
         User::class,
         UserDraft::class,
         UserDraft.`$`::class,
-    ]
+    ],
 )
 @Entity
 @Table(name = "t_user")
@@ -48,7 +50,7 @@ interface User {
 
     @ManyToManyView(
         prop = "userRoleBands",
-        deeperProp = "role"
+        deeperProp = "role",
     )
     val roles: List<Role>
 }

@@ -63,7 +63,6 @@ class AuthResource(
             user =
                 LoginUserResponse(
                     realname = user.realname,
-                    roles = listOf(),
                     basicRoles = basicRoles,
                 ),
         )

@@ -22,7 +22,6 @@ data class LoginResponse(
 
 data class LoginUserResponse(
     val realname: String,
-    val roles: List<Role>,
     val basicRoles: List<RoleWithBandId>,
 )
 
