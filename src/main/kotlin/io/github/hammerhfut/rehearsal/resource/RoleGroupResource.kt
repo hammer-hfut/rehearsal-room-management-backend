@@ -21,7 +21,7 @@ import org.jboss.resteasy.reactive.RestPath
  *@date 2024/2/20 13:29
  */
 
-@Path("/role-group")
+@Path("/role/group")
 class RoleGroupResource(
     private val sqlClient: KSqlClient,
 ) {

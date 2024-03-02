@@ -31,7 +31,7 @@ class RoleResource(
     @GET
     @RunOnVirtualThread
     fun getAllRoles(): Set<GetAllRolesResponseElement> {
-        val roleSet =
+        val roles =
             sqlClient.createQuery(Role::class) {
                 select(
                     table.fetchBy {
@@ -42,7 +42,10 @@ class RoleResource(
                     },
                 )
             }.execute()
-        return roleService.sortRolesByGroup(roleSet)
+        val roleGroupMap = roles.groupBy { it.roleGroup }
+        val groupedRoles = mutableSetOf<GetAllRolesResponseElement>()
+        roleGroupMap.forEach { (k, v) -> groupedRoles.add(GetAllRolesResponseElement(k, v)) }
+        return groupedRoles
     }
 
     @GET

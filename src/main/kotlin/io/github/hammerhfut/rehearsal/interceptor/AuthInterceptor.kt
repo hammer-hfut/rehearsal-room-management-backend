@@ -35,7 +35,7 @@ class AuthInterceptor(
         if (path != appConfig.loginApiPath()) {
             // 除了 [login] 都需要校验url合法性
             val token =
-                header.getHeaderString(HEADER_AUTHORIZATION)
+                header.getHeaderString(appConfig.headerAuth())
                     ?: throw badResponse
             val (utoken, encryptedUrl) = splitToken(token)
             if (!checkUrl(utoken, encryptedUrl, path)) {
@@ -58,7 +58,6 @@ class AuthInterceptor(
     }
 
     companion object {
-        const val HEADER_AUTHORIZATION = "Authorization"
         private val badResponse = BusinessError(ErrorCode.UNAUTHORIZED)
     }
 }

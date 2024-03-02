@@ -1,3 +1,5 @@
+@file:Suppress("ktlint:standard:no-wildcard-imports")
+
 package io.github.hammerhfut.rehearsal.util
 
 import java.nio.charset.StandardCharsets

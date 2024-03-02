@@ -18,6 +18,8 @@ interface AppConfig {
     @WithDefault("/auth/login")
     fun loginApiPath(): String
 
+    fun headerAuth(): String
+
     fun userCacheSize(): UserCacheSize
 
     interface UserCacheSize {

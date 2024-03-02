@@ -9,6 +9,7 @@ quarkus:
 app-config:
   debug: true # 如果为 [true] 则跳过token和url认证
   login-api-path: "/auth/login"
+  header-auth: "Authorization"
   user-cache-size:
       data: 100
       role: 100
