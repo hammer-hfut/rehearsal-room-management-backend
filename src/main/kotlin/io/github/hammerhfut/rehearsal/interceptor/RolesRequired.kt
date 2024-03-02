@@ -67,6 +67,7 @@ class RolesRequiredInterceptor(
 
     @AroundInvoke
     fun intercept(context: InvocationContext): Any? {
+        if (appConfig.ignoreRole()) return context.proceed()
         val token = header.getHeaderString(appConfig.headerAuth())
         val (utoken, _) = splitToken(token)
         val (rolesRequired, requireBand) = getAnnotationInfo(context)

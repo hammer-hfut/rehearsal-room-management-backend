@@ -15,6 +15,9 @@ interface AppConfig {
     @WithDefault("false")
     fun debug(): Boolean
 
+    @WithDefault("false")
+    fun ignoreRole(): Boolean
+
     @WithDefault("/auth/login")
     fun loginApiPath(): String
 
