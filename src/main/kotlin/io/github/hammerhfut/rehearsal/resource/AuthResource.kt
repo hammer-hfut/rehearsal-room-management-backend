@@ -1,8 +1,9 @@
+@file:Suppress("ktlint:standard:no-wildcard-imports")
+
 package io.github.hammerhfut.rehearsal.resource
 
 import io.github.hammerhfut.rehearsal.exception.BusinessError
 import io.github.hammerhfut.rehearsal.exception.ErrorCode
-import io.github.hammerhfut.rehearsal.interceptor.AuthInterceptor
 import io.github.hammerhfut.rehearsal.interceptor.RolesRequired
 import io.github.hammerhfut.rehearsal.model.BasicRoles
 import io.github.hammerhfut.rehearsal.model.db.User
@@ -11,14 +12,16 @@ import io.github.hammerhfut.rehearsal.model.db.username
 import io.github.hammerhfut.rehearsal.model.dto.*
 import io.github.hammerhfut.rehearsal.service.AuthService
 import io.github.hammerhfut.rehearsal.service.LIFETIME
+import io.github.hammerhfut.rehearsal.util.AuthUtil
 import io.github.hammerhfut.rehearsal.util.RoleUtil
 import io.github.hammerhfut.rehearsal.util.splitToken
 import io.smallrye.common.annotation.RunOnVirtualThread
 import jakarta.ws.rs.GET
-import jakarta.ws.rs.HeaderParam
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
+import jakarta.ws.rs.core.Context
+import jakarta.ws.rs.core.HttpHeaders
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.jboss.logging.Logger
@@ -35,6 +38,7 @@ class AuthResource(
     private val sqlClient: KSqlClient,
     private val authService: AuthService,
     private val roleUtil: RoleUtil,
+    private val authUtil: AuthUtil,
 ) {
     private val logger = Logger.getLogger("Auth")
 
@@ -53,9 +57,10 @@ class AuthResource(
             }.fetchOneOrNull()
                 ?.takeIf { BCrypt.checkpw(input.password, it.password) }
                 ?: throw BusinessError(ErrorCode.FORBIDDEN) // TODO 异常处理
-        val (utoken, timestamp) = authService.generateUtoken(user.id, input.timestamp)
+        val (utoken, timestamp) = authService.generateUtoken(user.id)
         logger.info("[utoken]: $utoken")
         val basicRoles = roleUtil.getRoleByUserId(user.id) ?: listOf()
+        authService.cacheUserInfo(timestamp, input.timestamp, utoken, user)
         return LoginResponse(
             utoken = utoken,
             lifetime = LIFETIME.toMillis(),
@@ -72,8 +77,12 @@ class AuthResource(
     @Path("/test-token")
     @RunOnVirtualThread
     @RolesRequired(roles = [BasicRoles.APPOINTMENT, BasicRoles.EQUIPMENT], requireBand = true)
-    fun testToken(test: Test): String {
+    fun testToken(
+        test: Test,
+        @Context headers: HttpHeaders,
+    ): String {
         val testMsg = "test token"
+        logger.info(authUtil.getUser())
         return testMsg
     }
 
@@ -87,8 +96,8 @@ class AuthResource(
     @RunOnVirtualThread
     fun refreshKey(
         @RestPath key: Long,
-        @HeaderParam(AuthInterceptor.HEADER_AUTHORIZATION) token: String,
     ): RefreshKeyResponse {
+        val token = authUtil.getToken()
         val utokenCache =
             authService.findUtokenCacheDataOrNull(splitToken(token).first)
                 ?.takeIf { it.key == key }

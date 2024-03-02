@@ -8,4 +8,4 @@ import io.quarkus.test.junit.QuarkusIntegrationTest
  */
 
 @QuarkusIntegrationTest
-class AuthResourceIT: AuthResourceTest()
+class AuthResourceIT : AuthResourceTestData()

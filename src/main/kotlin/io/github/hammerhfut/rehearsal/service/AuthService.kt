@@ -4,6 +4,7 @@ package io.github.hammerhfut.rehearsal.service
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import io.github.hammerhfut.rehearsal.model.UserInfoCache
+import io.github.hammerhfut.rehearsal.model.db.User
 import io.github.hammerhfut.rehearsal.util.generateSecretKeySpec
 import jakarta.inject.Singleton
 import java.nio.ByteBuffer
@@ -20,7 +21,9 @@ val LIFETIME = 1.hours.toJavaDuration()
 const val RAND_KEY_RANGE = 100
 
 @Singleton
-class AuthService {
+class AuthService(
+    private val cacheService: CacheService,
+) {
     private val utokenCache =
         Caffeine.newBuilder()
             .expireAfterWrite(LIFETIME)
@@ -31,10 +34,7 @@ class AuthService {
     /**
      * @return (utoken, timestamp)
      */
-    fun generateUtoken(
-        id: Long,
-        userTimestamp: Long,
-    ): Pair<String, Long> {
+    fun generateUtoken(id: Long): Pair<String, Long> {
         var flag = true
         var utoken = ""
         var serverTimestamp: Long = 0
@@ -50,13 +50,26 @@ class AuthService {
                     )
             flag = utokenCache.getIfPresent(utoken) != null
         }
-        val key = serverTimestamp + userTimestamp
-        val keySpec = generateSecretKeySpec(key)
-        utokenCache.put(utoken, UserInfoCache(id, LIFETIME.toMillis(), key, keySpec))
+
         return Pair(utoken, serverTimestamp)
     }
 
-    fun findUtokenCacheDataOrNull(utoken: String): UserInfoCache? = utokenCache.getIfPresent(utoken)
+    fun cacheUserInfo(
+        serverTimestamp: Long,
+        userTimestamp: Long,
+        utoken: String,
+        user: User,
+    ) {
+        val key = serverTimestamp + userTimestamp
+        val keySpec = generateSecretKeySpec(key)
+        cacheService.cacheUser(
+            utoken,
+            UserInfoCache(user.id, LIFETIME.toMillis(), key, keySpec),
+            user,
+        )
+    }
+
+    fun findUtokenCacheDataOrNull(utoken: String): UserInfoCache? = cacheService.findUtokenCacheDataOrNull(utoken)
 
     fun refreshKey(userInfoCache: UserInfoCache): Int {
         var key = userInfoCache.key

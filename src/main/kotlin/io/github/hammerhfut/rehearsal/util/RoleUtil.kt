@@ -1,10 +1,9 @@
 package io.github.hammerhfut.rehearsal.util
 
-import com.github.benmanes.caffeine.cache.Caffeine
-import io.github.hammerhfut.rehearsal.config.AppConfig
 import io.github.hammerhfut.rehearsal.model.db.Role
 import io.github.hammerhfut.rehearsal.model.db.UserRoleBand
 import io.github.hammerhfut.rehearsal.model.dto.RoleWithBandId
+import io.github.hammerhfut.rehearsal.service.CacheService
 import io.github.hammerhfut.rehearsal.service.RoleService
 import jakarta.inject.Singleton
 
@@ -16,27 +15,10 @@ import jakarta.inject.Singleton
 @Singleton
 class RoleUtil(
     private val roleService: RoleService,
-    appConfig: AppConfig,
+    private val cacheService: CacheService,
 ) {
-    private val roleCache =
-        Caffeine.newBuilder()
-            .maximumSize(appConfig.userCacheSize().data())
-            .build<Long, List<RoleWithBandId>> { key -> writeRoles(key) }
-
-    private fun writeRoles(userId: Long): List<RoleWithBandId> {
-        val basicRoleSet = mutableSetOf<Pair<Role, Long?>>()
-        roleService.getRoleByUserId(userId).forEach {
-            basicRoleSet.addAll(it.toBasicRoles())
-        }
-        val basicRoles = mutableListOf<RoleWithBandId>()
-        basicRoleSet.forEach {
-            basicRoles.addLast(RoleWithBandId(it.first, it.second))
-        }
-        return basicRoles
-    }
-
     fun getRoleByUserId(userId: Long): List<RoleWithBandId>? {
-        return roleCache.get(userId)
+        return cacheService.getRoleByUserId(userId)
     }
 }
 

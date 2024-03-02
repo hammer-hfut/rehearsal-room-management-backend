@@ -2,6 +2,7 @@
 
 package io.github.hammerhfut.rehearsal.interceptor
 
+import io.github.hammerhfut.rehearsal.config.AppConfig
 import io.github.hammerhfut.rehearsal.exception.BusinessError
 import io.github.hammerhfut.rehearsal.exception.ErrorCode
 import io.github.hammerhfut.rehearsal.model.BasicRoles
@@ -60,12 +61,13 @@ class RolesRequiredInterceptor(
     private val header: HttpHeaders,
     private val authService: AuthService,
     private val roleService: RoleService,
+    private val appConfig: AppConfig,
 ) {
     private val logger = Logger.getLogger("RolesRequiredLogger")
 
     @AroundInvoke
     fun intercept(context: InvocationContext): Any? {
-        val token = header.getHeaderString(AuthInterceptor.HEADER_AUTHORIZATION)
+        val token = header.getHeaderString(appConfig.headerAuth())
         val (utoken, _) = splitToken(token)
         val (rolesRequired, requireBand) = getAnnotationInfo(context)
 
@@ -96,7 +98,7 @@ class RolesRequiredInterceptor(
     }
 
     private fun getRolesByUtoken(utoken: String): List<UserRoleBand> {
-        val id = authService.findUtokenCacheDataOrNull(utoken)?.id ?: throw BusinessError(ErrorCode.UNAUTHORIZED)
+        val id = authService.findUtokenCacheDataOrNull(utoken)?.userId ?: throw BusinessError(ErrorCode.UNAUTHORIZED)
         return roleService.getRoleByUserId(id)
     }
 

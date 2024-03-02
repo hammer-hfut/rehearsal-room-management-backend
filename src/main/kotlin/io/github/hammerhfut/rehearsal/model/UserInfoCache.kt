@@ -8,7 +8,7 @@ import javax.crypto.spec.SecretKeySpec
  */
 
 data class UserInfoCache(
-    val id: Long,
+    val userId: Long,
     val lifetime: Long,
     var key: Long,
     var keySpec: SecretKeySpec,
