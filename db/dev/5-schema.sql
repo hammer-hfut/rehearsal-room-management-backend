@@ -193,9 +193,9 @@ alter table equipment_tag_mapping
 create table if not exists role_group
 (
     name          text                 not null,
-    id            bigint               not null
-    constraint role_group_ky
-    primary key
+    id            serial               not null
+        constraint role_group_ky
+            primary key
 );
 
 create unique index if not exists role_group_name_uindex

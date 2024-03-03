@@ -10,7 +10,7 @@ import org.babyfish.jimmer.sql.*
 @Entity
 interface RoleGroup {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     val id: Long
 
     @Key

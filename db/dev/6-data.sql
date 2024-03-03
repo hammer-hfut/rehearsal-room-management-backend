@@ -6,12 +6,12 @@ VALUES
     ON conflict(username)
     DO NOTHING;
 
-INSERT INTO "public"."role_group" ("id", "name")
+INSERT INTO "public"."role_group" ("name")
 VALUES
-    (1, 'admin'),
-    (2, 'member'),
-    (3, 'other')
-    ON conflict(id)
+    ('admin'),
+    ('member'),
+    ('other')
+    ON conflict(name)
     DO NOTHING;
 
 INSERT INTO "public"."role" ("name", "remark", "editable", "role_group_id")
