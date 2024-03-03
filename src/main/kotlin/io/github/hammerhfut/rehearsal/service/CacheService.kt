@@ -41,9 +41,11 @@ class CacheService(
         utoken: String,
         userInfoCache: UserInfoCache,
         user: User,
+        basicRoles: List<RoleWithBandId>,
     ) {
         utokenCache.put(utoken, userInfoCache)
         userCache.put(user.id, user)
+        roleCache.put(user.id, basicRoles)
     }
 
     private fun writeUser(userId: Long): User {
@@ -66,7 +68,7 @@ class CacheService(
     fun findUtokenCacheDataOrNull(utoken: String): UserInfoCache? = utokenCache.getIfPresent(utoken)
 
     private fun writeRoles(userId: Long): List<RoleWithBandId> {
-        println("try find role")
+        println("no cache try find role")
         val basicRoleSet = mutableSetOf<Pair<Role, Long?>>()
         roleService.getRoleByUserId(userId).forEach {
             basicRoleSet.addAll(it.toBasicRoles())
@@ -82,7 +84,7 @@ class CacheService(
         return roleCache.get(userId)
     }
 
-    fun invalidateRole(userId: Long) {
+    fun invalidateUserRole(userId: Long) {
         roleCache.invalidate(userId)
     }
 }

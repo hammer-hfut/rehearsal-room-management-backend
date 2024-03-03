@@ -6,7 +6,6 @@ import io.github.hammerhfut.rehearsal.exception.BusinessError
 import io.github.hammerhfut.rehearsal.exception.ErrorCode
 import io.github.hammerhfut.rehearsal.model.dto.LoginData
 import io.github.hammerhfut.rehearsal.service.CacheService
-import io.github.hammerhfut.rehearsal.util.AuthUtil
 import io.github.hammerhfut.rehearsal.util.aesEncrypt
 import io.github.hammerhfut.rehearsal.util.generateSecretKeySpec
 import io.quarkus.test.junit.QuarkusTest
@@ -15,9 +14,7 @@ import jakarta.inject.Inject
 import jakarta.ws.rs.core.MediaType
 import org.hamcrest.core.Is.`is`
 import org.jboss.logging.Logger
-import org.junit.jupiter.api.MethodOrderer.OrderAnnotation
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestMethodOrder
 import javax.crypto.spec.SecretKeySpec
 
 /**
@@ -26,8 +23,7 @@ import javax.crypto.spec.SecretKeySpec
  */
 
 @QuarkusTest
-@TestMethodOrder(OrderAnnotation::class)
-open class AuthResourceTestData {
+open class AuthResourceTest {
     @Inject
     private lateinit var appConfig: AppConfig
 
@@ -36,9 +32,6 @@ open class AuthResourceTestData {
 
     @Inject
     private lateinit var cacheService: CacheService
-
-    @Inject
-    private lateinit var authUtil: AuthUtil
 
     var key: Long = 0
     var utoken: String = ""
@@ -77,14 +70,13 @@ open class AuthResourceTestData {
 
     fun testToken() {
         val msgExpected = "test token"
-        val targetPath = "/auth/test/token"
-        val urlToken = aesEncrypt(targetPath, keySpec)
+        val path = "/auth/test/token"
+        val urlToken = aesEncrypt(path, keySpec)
         val token = generateToken(urlToken)
         logger.debug("[token]: $token")
         given()
             .header(appConfig.headerAuth(), token)
-            .`when`()
-            .get(targetPath)
+            .`when`().get(path)
             .then()
             .statusCode(200)
             .body(`is`(msgExpected))
@@ -96,8 +88,7 @@ open class AuthResourceTestData {
         val token = generateToken(urlToken)
         given()
             .header(appConfig.headerAuth(), token)
-            .`when`()
-            .put(targetPath)
+            .`when`().put(targetPath)
             .then()
             .statusCode(200)
     }
@@ -108,14 +99,13 @@ open class AuthResourceTestData {
     fun testUserCache() {
         testLogin()
 
-        val targetPath = "/auth/test/user"
-        val urlToken = aesEncrypt(targetPath, keySpec)
+        val path = "/auth/test/user"
+        val urlToken = aesEncrypt(path, keySpec)
         val token = generateToken(urlToken)
         val user =
             given()
                 .header(appConfig.headerAuth(), token)
-                .`when`()
-                .get(targetPath)
+                .`when`().get(path)
                 .then()
                 .statusCode(200)
                 .extract().response().jsonPath()
@@ -135,20 +125,19 @@ open class AuthResourceTestData {
     fun testRoleCache() {
         testLogin()
 
-        val targetPath = "/auth/test/role"
-        val urlToken = aesEncrypt(targetPath, keySpec)
+        val path = "/auth/test/role"
+        val urlToken = aesEncrypt(path, keySpec)
         val token = generateToken(urlToken)
         val roles =
             given()
                 .header(appConfig.headerAuth(), token)
-                .`when`()
-                .get(targetPath)
+                .`when`().get(path)
                 .then()
                 .statusCode(200)
                 .extract().response().jsonPath()
         logger.info("[role-cache]: $roles")
         val id = cacheService.findUserByUtoken(utoken)?.id ?: throw BusinessError(ErrorCode.NOT_FOUND)
-        cacheService.invalidateRole(id)
+        cacheService.invalidateUserRole(id)
         logger.info("[invalid-role]: ${cacheService.getRoleByUserId(id)}")
     }
 }

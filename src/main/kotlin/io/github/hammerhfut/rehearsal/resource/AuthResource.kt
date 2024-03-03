@@ -60,7 +60,7 @@ class AuthResource(
         val (utoken, timestamp) = authService.generateUtoken(user.id)
         logger.info("[utoken]: $utoken")
         val basicRoles = roleUtil.getRoleByUserId(user.id) ?: listOf()
-        authService.cacheUserInfo(timestamp, input.timestamp, utoken, user)
+        authService.cacheUserInfo(timestamp, input.timestamp, utoken, user, basicRoles)
         return LoginResponse(
             utoken = utoken,
             lifetime = LIFETIME.toMillis(),

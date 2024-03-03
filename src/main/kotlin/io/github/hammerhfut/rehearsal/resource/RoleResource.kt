@@ -6,6 +6,7 @@ import io.github.hammerhfut.rehearsal.exception.BusinessError
 import io.github.hammerhfut.rehearsal.exception.ErrorCode
 import io.github.hammerhfut.rehearsal.model.db.*
 import io.github.hammerhfut.rehearsal.model.dto.*
+import io.github.hammerhfut.rehearsal.service.CacheService
 import io.github.hammerhfut.rehearsal.service.RoleService
 import io.smallrye.common.annotation.RunOnVirtualThread
 import jakarta.ws.rs.DELETE
@@ -27,6 +28,7 @@ import org.jboss.resteasy.reactive.RestPath
 class RoleResource(
     private val sqlClient: KSqlClient,
     private val roleService: RoleService,
+    private val cacheService: CacheService,
 ) {
     @GET
     @RunOnVirtualThread
@@ -124,5 +126,6 @@ class RoleResource(
     @RunOnVirtualThread
     fun setUserRoles(input: SetUserRolesData) {
         sqlClient.save(roleService.parseRoleBandsToUser(input.userId, input.roles))
+        cacheService.invalidateUserRole(input.userId)
     }
 }

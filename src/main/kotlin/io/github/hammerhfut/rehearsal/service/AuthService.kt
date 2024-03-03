@@ -5,6 +5,7 @@ package io.github.hammerhfut.rehearsal.service
 import com.github.benmanes.caffeine.cache.Caffeine
 import io.github.hammerhfut.rehearsal.model.UserInfoCache
 import io.github.hammerhfut.rehearsal.model.db.User
+import io.github.hammerhfut.rehearsal.model.dto.RoleWithBandId
 import io.github.hammerhfut.rehearsal.util.generateSecretKeySpec
 import jakarta.inject.Singleton
 import java.nio.ByteBuffer
@@ -59,6 +60,7 @@ class AuthService(
         userTimestamp: Long,
         utoken: String,
         user: User,
+        basicRoles: List<RoleWithBandId>,
     ) {
         val key = serverTimestamp + userTimestamp
         val keySpec = generateSecretKeySpec(key)
@@ -66,6 +68,7 @@ class AuthService(
             utoken,
             UserInfoCache(user.id, LIFETIME.toMillis(), key, keySpec),
             user,
+            basicRoles,
         )
     }
 
