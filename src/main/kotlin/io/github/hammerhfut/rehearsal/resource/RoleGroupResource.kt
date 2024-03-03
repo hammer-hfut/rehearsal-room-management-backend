@@ -3,6 +3,7 @@ package io.github.hammerhfut.rehearsal.resource
 import io.github.hammerhfut.rehearsal.exception.BusinessError
 import io.github.hammerhfut.rehearsal.exception.ErrorCode
 import io.github.hammerhfut.rehearsal.model.db.RoleGroup
+import io.github.hammerhfut.rehearsal.model.db.dto.CreateRoleGroupDto
 import io.github.hammerhfut.rehearsal.model.db.fetchBy
 import io.github.hammerhfut.rehearsal.model.db.id
 import io.github.hammerhfut.rehearsal.model.db.name
@@ -27,8 +28,9 @@ class RoleGroupResource(
 ) {
     @POST
     @RunOnVirtualThread
-    fun createRoleGroup(input: RoleGroup) {
-        sqlClient.save(input)
+    fun createRoleGroup(input: CreateRoleGroupDto): Long {
+        val newGroup = sqlClient.save(input.toEntity()).modifiedEntity
+        return newGroup.id
     }
 
     @GET

@@ -88,20 +88,22 @@ class RoleResource(
 
     @POST
     @RunOnVirtualThread
-    fun createRole(input: CreateRoleData) {
-        sqlClient.save(
-            new(Role::class).by {
-                name = input.name
-                remark = input.remark
-                editable = true
-                roleGroup().id = input.roleGroupId
-                input.children.forEach {
-                    children().addBy {
-                        id = it
+    fun createRole(input: CreateRoleData): Long {
+        val id =
+            sqlClient.save(
+                new(Role::class).by {
+                    name = input.name
+                    remark = input.remark
+                    editable = true
+                    roleGroup().id = input.roleGroupId
+                    input.children.forEach {
+                        children().addBy {
+                            id = it
+                        }
                     }
-                }
-            },
-        )
+                },
+            ).modifiedEntity.id
+        return id
     }
 
     @DELETE

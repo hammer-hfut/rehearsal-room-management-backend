@@ -5,10 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.hammerhfut.rehearsal.config.AppConfig
 import io.github.hammerhfut.rehearsal.exception.BusinessError
 import io.github.hammerhfut.rehearsal.exception.ErrorCode
-import io.github.hammerhfut.rehearsal.model.dto.GetAllRolesResponseElement
-import io.github.hammerhfut.rehearsal.model.dto.LoginData
-import io.github.hammerhfut.rehearsal.model.dto.RoleBand
-import io.github.hammerhfut.rehearsal.model.dto.SetUserRolesData
+import io.github.hammerhfut.rehearsal.model.db.dto.CreateRoleGroupDto
+import io.github.hammerhfut.rehearsal.model.dto.*
 import io.github.hammerhfut.rehearsal.service.CacheService
 import io.github.hammerhfut.rehearsal.util.aesEncrypt
 import io.github.hammerhfut.rehearsal.util.generateSecretKeySpec
@@ -147,13 +145,55 @@ open class RoleResourceTest {
     @Test
     fun testRoleGroup() {
         testLogin()
-        createRoleGroup()
-//        添加role到分组
-//        移动role到分组
+        val newGroupId = createRoleGroup()
+        val roleId = createRole(newGroupId)
+        val roleGroupId = getRole(roleId)
+        assert(roleGroupId == newGroupId)
     }
 
-    fun createRoleGroup() {
-        val path = ""
+    fun createRoleGroup(): Long {
+        val path = "/role/group"
+        val input = CreateRoleGroupDto("1513")
+        val result =
+            given()
+                .header(appConfig.headerAuth(), tokenGenerator(path))
+                .body(objectMapper.writeValueAsString(input))
+                .contentType(MediaType.APPLICATION_JSON)
+                .`when`().post(path)
+                .then()
+                .extract().response().jsonPath()
+        return result.getLong("")
+    }
+
+    fun createRole(groupId: Long): Long {
+        val path = "/role"
+        val input =
+            CreateRoleData(
+                name = System.currentTimeMillis().toString(),
+                remark = "",
+                children = listOf(),
+                roleGroupId = groupId,
+            )
+        val result =
+            given()
+                .header(appConfig.headerAuth(), tokenGenerator(path))
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(objectMapper.writeValueAsString(input))
+                .`when`().post(path)
+                .then()
+                .extract().response().jsonPath()
+        return result.getLong("")
+    }
+
+    fun getRole(roleId: Long): Long {
+        val path = "/role/$roleId"
+        val result =
+            given()
+                .header(appConfig.headerAuth(), tokenGenerator(path))
+                .`when`().get(path)
+                .then()
+                .extract().response().jsonPath()
+        return result.getLong("roleGroup.id")
     }
 
     fun tokenGenerator(targetPath: String): String {
