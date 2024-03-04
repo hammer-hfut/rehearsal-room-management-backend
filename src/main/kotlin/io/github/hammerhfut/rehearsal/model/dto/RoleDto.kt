@@ -13,24 +13,6 @@ data class GetAllRolesResponseElement(
     val roles: List<Role>?,
 )
 
-data class SetUserRolesData(
-    val roles: List<RoleBand>,
-    val userId: Long,
-)
-
-data class RoleBand(
-    val roleId: Long,
-    val bandId: Long?,
-)
-
-data class MoveToRoleGroupData(
-    val roleId: Long,
-    val roleGroupId: Long,
-)
-
-data class CreateRoleData(
-    val name: String,
-    val remark: String,
-    val children: List<Long>,
-    val roleGroupId: Long,
+data class ILoveDetekt(
+    val well: String,
 )

@@ -4,8 +4,6 @@ package io.github.hammerhfut.rehearsal.resource
 
 import io.github.hammerhfut.rehearsal.exception.BusinessError
 import io.github.hammerhfut.rehearsal.exception.ErrorCode
-import io.github.hammerhfut.rehearsal.interceptor.RolesRequired
-import io.github.hammerhfut.rehearsal.model.BasicRoles
 import io.github.hammerhfut.rehearsal.model.db.User
 import io.github.hammerhfut.rehearsal.model.db.fetchBy
 import io.github.hammerhfut.rehearsal.model.db.username
@@ -16,12 +14,9 @@ import io.github.hammerhfut.rehearsal.util.AuthUtil
 import io.github.hammerhfut.rehearsal.util.RoleUtil
 import io.github.hammerhfut.rehearsal.util.splitToken
 import io.smallrye.common.annotation.RunOnVirtualThread
-import jakarta.ws.rs.GET
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
-import jakarta.ws.rs.core.Context
-import jakarta.ws.rs.core.HttpHeaders
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.jboss.logging.Logger
@@ -72,24 +67,6 @@ class AuthResource(
                 ),
         )
     }
-
-    @GET
-    @Path("/test-token")
-    @RunOnVirtualThread
-    @RolesRequired(roles = [BasicRoles.APPOINTMENT, BasicRoles.EQUIPMENT], requireBand = true)
-    fun testToken(
-        test: Test,
-        @Context headers: HttpHeaders,
-    ): String {
-        val testMsg = "test token"
-        logger.info(authUtil.getUser())
-        return testMsg
-    }
-
-    data class Test(
-        val str: String,
-        val bandId: Long,
-    )
 
     @PUT
     @Path("/refresh/{key}")

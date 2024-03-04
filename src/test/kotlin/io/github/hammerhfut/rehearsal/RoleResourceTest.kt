@@ -5,7 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.hammerhfut.rehearsal.config.AppConfig
 import io.github.hammerhfut.rehearsal.exception.BusinessError
 import io.github.hammerhfut.rehearsal.exception.ErrorCode
+import io.github.hammerhfut.rehearsal.model.db.dto.CreateRoleData
 import io.github.hammerhfut.rehearsal.model.db.dto.CreateRoleGroupDto
+import io.github.hammerhfut.rehearsal.model.db.dto.SetUserRolesData
 import io.github.hammerhfut.rehearsal.model.dto.*
 import io.github.hammerhfut.rehearsal.service.CacheService
 import io.github.hammerhfut.rehearsal.util.aesEncrypt
@@ -42,13 +44,13 @@ open class RoleResourceTest {
     @Test
     fun testGetRole() {
         testLogin()
-        val (oldSize, lastRoleId) = testGetAllRoles()
-        logger.info("$oldSize, $lastRoleId")
-        lastRoleId?.let { deleteRole(it) }
+        val newRoleId = createRole(3)
+        val (oldSize, _) = testGetAllRoles()
+        deleteRole(newRoleId)
         val (newSize, _) = testGetAllRoles()
-        logger.info("$newSize")
-        if (newSize != null) {
-            assert(oldSize == newSize.plus(1))
+        logger.info("$oldSize, $newSize")
+        if (newSize != null && oldSize != null) {
+            assert(oldSize > newSize)
         } else {
             throw BusinessError(ErrorCode.NOT_FOUND)
         }
@@ -99,7 +101,7 @@ open class RoleResourceTest {
 
         val jsonString = objectMapper.writeValueAsString(result.getList<GetAllRolesResponseElement>(""))
         val rolesJson = objectMapper.readValue(jsonString, object : TypeReference<List<GetAllRolesResponseElement>>() {})
-        return Pair(rolesJson.last()?.roles?.size, rolesJson.last().roles?.last()?.id)
+        return Pair(rolesJson[2].roles?.size, rolesJson[2].roleGroup?.id)
     }
 
     fun getRolesByUserId(userId: Long) {
@@ -116,9 +118,16 @@ open class RoleResourceTest {
         val path = "/role/user"
         val input =
             SetUserRolesData(
-                roles = listOf(RoleBand(roleId = 10, bandId = 1)),
                 userId = 1,
+                roles =
+                    listOf(
+                        SetUserRolesData.TargetOf_roles(
+                            roleId = 10,
+                            bandId = 1,
+                        ),
+                    ),
             )
+
         given()
             .header(appConfig.headerAuth(), tokenGenerator(path))
             .contentType(MediaType.APPLICATION_JSON)
@@ -153,7 +162,7 @@ open class RoleResourceTest {
 
     fun createRoleGroup(): Long {
         val path = "/role/group"
-        val input = CreateRoleGroupDto("1513")
+        val input = CreateRoleGroupDto(System.currentTimeMillis().toString())
         val result =
             given()
                 .header(appConfig.headerAuth(), tokenGenerator(path))

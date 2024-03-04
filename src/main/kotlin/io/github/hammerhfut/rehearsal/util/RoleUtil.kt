@@ -4,7 +4,6 @@ import io.github.hammerhfut.rehearsal.model.db.Role
 import io.github.hammerhfut.rehearsal.model.db.UserRoleBand
 import io.github.hammerhfut.rehearsal.model.dto.RoleWithBandId
 import io.github.hammerhfut.rehearsal.service.CacheService
-import io.github.hammerhfut.rehearsal.service.RoleService
 import jakarta.inject.Singleton
 
 /**
@@ -14,7 +13,6 @@ import jakarta.inject.Singleton
 
 @Singleton
 class RoleUtil(
-    private val roleService: RoleService,
     private val cacheService: CacheService,
 ) {
     fun getRoleByUserId(userId: Long): List<RoleWithBandId>? {

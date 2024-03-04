@@ -76,7 +76,7 @@ class AuthService(
 
     fun refreshKey(userInfoCache: UserInfoCache): Int {
         var key = userInfoCache.key
-        val rand = random.nextInt(RAND_KEY_RANGE)
+        val rand = random.nextInt(1, RAND_KEY_RANGE)
         if (isOdd(key % rand)) {
             key += rand
         } else {

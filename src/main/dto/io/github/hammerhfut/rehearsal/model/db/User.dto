@@ -1,0 +1,9 @@
+import io.quarkus.runtime.annotations.RegisterForReflection
+@RegisterForReflection
+SetUserRolesData {
+    id as userId
+    userRoleBands as roles {
+        id(band) as bandId
+        id(role) as roleId
+    }
+}

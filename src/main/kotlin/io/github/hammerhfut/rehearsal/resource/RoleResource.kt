@@ -5,6 +5,9 @@ package io.github.hammerhfut.rehearsal.resource
 import io.github.hammerhfut.rehearsal.exception.BusinessError
 import io.github.hammerhfut.rehearsal.exception.ErrorCode
 import io.github.hammerhfut.rehearsal.model.db.*
+import io.github.hammerhfut.rehearsal.model.db.dto.CreateRoleData
+import io.github.hammerhfut.rehearsal.model.db.dto.MoveToRoleGroupData
+import io.github.hammerhfut.rehearsal.model.db.dto.SetUserRolesData
 import io.github.hammerhfut.rehearsal.model.dto.*
 import io.github.hammerhfut.rehearsal.service.CacheService
 import io.github.hammerhfut.rehearsal.service.RoleService
@@ -14,7 +17,6 @@ import jakarta.ws.rs.GET
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.PUT
 import jakarta.ws.rs.Path
-import org.babyfish.jimmer.kt.new
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.jboss.resteasy.reactive.RestPath
@@ -75,6 +77,7 @@ class RoleResource(
     @Path("/role-group")
     @RunOnVirtualThread
     fun moveToRoleGroup(input: MoveToRoleGroupData) {
+//        TODO
         val affectedRowCount =
             sqlClient.createUpdate(Role::class) {
                 where(table.id eq input.roleId)
@@ -89,18 +92,11 @@ class RoleResource(
     @POST
     @RunOnVirtualThread
     fun createRole(input: CreateRoleData): Long {
+//        TODO
         val id =
             sqlClient.save(
-                new(Role::class).by {
-                    name = input.name
-                    remark = input.remark
+                input.toEntity().copy {
                     editable = true
-                    roleGroup().id = input.roleGroupId
-                    input.children.forEach {
-                        children().addBy {
-                            id = it
-                        }
-                    }
                 },
             ).modifiedEntity.id
         return id
@@ -127,7 +123,7 @@ class RoleResource(
     @Path("/user")
     @RunOnVirtualThread
     fun setUserRoles(input: SetUserRolesData) {
-        sqlClient.save(roleService.parseRoleBandsToUser(input.userId, input.roles))
+        sqlClient.save(input.toEntity())
         cacheService.invalidateUserRole(input.userId)
     }
 }

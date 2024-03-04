@@ -32,6 +32,7 @@ class TestResource(
     ): String {
         val testMsg = "test token"
         logger.info(authUtil.getUser())
+        logger.info(headers)
         return testMsg
     }
 

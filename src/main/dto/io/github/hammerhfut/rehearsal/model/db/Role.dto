@@ -7,3 +7,19 @@ GetAllRolesResponseElementDto {
     remark
     editable
 }
+
+@RegisterForReflection
+MoveToRoleGroupData {
+    id as roleId
+    id(roleGroup) as roleGroupId
+}
+
+@RegisterForReflection
+CreateRoleData {
+    name
+    remark
+    children {
+        id
+    }
+    id(roleGroup) as roleGroupId
+}
