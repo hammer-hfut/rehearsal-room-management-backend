@@ -6,10 +6,11 @@ import java.nio.file.StandardOpenOption
 import kotlin.io.path.*
 
 plugins {
-    kotlin("jvm") version "1.9.21"
-    kotlin("plugin.allopen") version "1.9.21"
+    kotlin("jvm") version "1.9.22"
+    kotlin("plugin.allopen") version "1.9.22"
     id("io.quarkus")
-    id("com.google.devtools.ksp") version "1.9.21-1.0.16"
+    id("tech.argonariod.gradle-plugin-jimmer") version "1.1.0"
+    id("com.google.devtools.ksp") version "1.9.22+"
     id("io.gitlab.arturbosch.detekt") version "1.23.4"
 }
 
@@ -21,12 +22,18 @@ repositories {
     mavenLocal()
 }
 
+jimmer {
+    version = "0.8.104"
+    dto {
+        mutable = true
+    }
+}
+
 val quarkusPlatformGroupId: String by project
 val quarkusPlatformArtifactId: String by project
 val quarkusPlatformVersion: String by project
 
 dependencies {
-    val jimmerVersion = "0.8.90"
     implementation(enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}"))
     // 序列化
     implementation("io.quarkus:quarkus-resteasy-reactive-jackson")
@@ -44,8 +51,6 @@ dependencies {
     implementation("io.quarkus:quarkus-config-yaml")
     // 数据库
     implementation("io.quarkus:quarkus-jdbc-postgresql")
-    implementation("org.babyfish.jimmer:jimmer-sql-kotlin:$jimmerVersion")
-    ksp("org.babyfish.jimmer:jimmer-ksp:$jimmerVersion")
     implementation("io.quarkus:quarkus-agroal")
     // 缓存
     implementation("io.quarkus:quarkus-cache")
@@ -89,18 +94,6 @@ detekt {
     buildUponDefaultConfig = true
     config.setFrom(rootProject.file("detekt-config.yml"))
 
-}
-
-// 解决 quarkus 与 ksp 集成的 bug
-project.afterEvaluate {
-    getTasksByName("quarkusGenerateCode", true).forEach { task ->
-        task.setDependsOn(
-            task.dependsOn.filterIsInstance<Provider<Task>>().filter { it.get().name != "processResources" })
-    }
-    getTasksByName("quarkusGenerateCodeDev", true).forEach { task ->
-        task.setDependsOn(
-            task.dependsOn.filterIsInstance<Provider<Task>>().filter { it.get().name != "processResources" })
-    }
 }
 
 // **************************** 开发 相关 **************************** //
