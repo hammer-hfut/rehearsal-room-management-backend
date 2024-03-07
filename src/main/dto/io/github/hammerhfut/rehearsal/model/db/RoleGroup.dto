@@ -1,0 +1,6 @@
+import io.quarkus.runtime.annotations.RegisterForReflection
+
+@RegisterForReflection
+CreateRoleGroupDto {
+    name
+}
