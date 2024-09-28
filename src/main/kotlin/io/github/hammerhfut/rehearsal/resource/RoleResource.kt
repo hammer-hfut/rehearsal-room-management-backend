@@ -35,6 +35,7 @@ class RoleResource(
     @GET
     @RunOnVirtualThread
     fun getAllRoles(): Set<GetAllRolesResponseElement> {
+        // BUG 不知道为啥每次登录后，会多出一个奇怪的 roleGroup，详见 /roles 页面
         val roles =
             sqlClient
                 .createQuery(Role::class) {

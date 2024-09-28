@@ -22,7 +22,7 @@ jimmer:
 app-config:
   debug: false # 如果为 [true] 则跳过token和url认证
   ignore-role: true # 如果为 [true] 则跳过role校验
-  tokenless-api-prefix: /auth/login, /auth/refresh
+  tokenless-api-prefix: /auth/login, /auth/refresh # 无需token的接口
   header-auth: "Authorization"
   user-cache-size:
       data: 100
