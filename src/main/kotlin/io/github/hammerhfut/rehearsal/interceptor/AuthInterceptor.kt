@@ -34,7 +34,6 @@ class AuthInterceptor(
         if (appConfig.debug()) return
 
         val path = uriInfo.path
-        println("path: $path")
         if (!isTokenless(path)) {
             // 除了指定的 api 都需要校验 url 合法性
             val token =

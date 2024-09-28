@@ -87,7 +87,7 @@ class AuthService(
             } else {
                 key - rand
             }
-        val newKeySpec = generateSecretKeySpec(key)
+        val newKeySpec = generateSecretKeySpec(newKey)
         utokenCacheService.cacheKey(
             utoken,
             KeyCacheData(
