@@ -34,7 +34,7 @@ val quarkusPlatformArtifactId: String by project
 val quarkusPlatformVersion: String by project
 
 dependencies {
-    implementation(enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}"))
+    implementation(enforcedPlatform("$quarkusPlatformGroupId:$quarkusPlatformArtifactId:$quarkusPlatformVersion"))
     // 序列化
     implementation("io.quarkus:quarkus-resteasy-reactive-jackson")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.16.1")
@@ -65,7 +65,6 @@ dependencies {
     // 测试
     testImplementation("io.quarkus:quarkus-junit5")
     testImplementation("io.rest-assured:rest-assured")
-
 }
 
 group = "io.github.hammerhfut"
@@ -96,7 +95,6 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
 detekt {
     buildUponDefaultConfig = true
     config.setFrom(rootProject.file("detekt-config.yml"))
-
 }
 
 // **************************** 开发 相关 **************************** //
@@ -105,31 +103,34 @@ tasks.register("generateDevDatabaseDDL") {
     group = "build"
     doLast {
         runBlocking(Dispatchers.IO) {
-            val ddlString = buildString {
-                requireNotNull(project.file("db/dev").listFiles()) {
-                    "The db/dev folder is missing, please pull the project again, or clone the project, or roll back to the commit before the db/dev folder was missing."
-                }.asSequence()
-                    .filter { '-' in it.name && it.extension == "sql" }
-                    .map { it.name.split('-') to async { it.readText() } }
-                    .sortedBy { (names, _) -> names[0].toInt() }
-                    .forEach { (names, deferredText) ->
-                        val text = deferredText.await().let {
-                            return@let if (names[1] == "schema.sql") {
-                                it.replace(Regex("alter table [a-z_]+\\s+owner to [a-z_]+;"), "")
-                            } else {
-                                it
-                            }
+            val ddlString =
+                buildString {
+                    requireNotNull(project.file("db/dev").listFiles()) {
+                        "The db/dev folder is missing, please pull the project again, or clone the project, or roll back to the commit before the db/dev folder was missing."
+                    }.asSequence()
+                        .filter { '-' in it.name && it.extension == "sql" }
+                        .map { it.name.split('-') to async { it.readText() } }
+                        .sortedBy { (names, _) -> names[0].toInt() }
+                        .forEach { (names, deferredText) ->
+                            val text =
+                                deferredText.await().let {
+                                    return@let if (names[1] == "schema.sql") {
+                                        it.replace(Regex("alter table [a-z_]+\\s+owner to [a-z_]+;"), "")
+                                    } else {
+                                        it
+                                    }
+                                }
+                            appendLine(text)
                         }
-                        appendLine(text)
-                    }
-            }
-            layout.buildDirectory.file("resources/main/dev/init.sql")
-                .get().asFile
+                }
+            layout.buildDirectory
+                .file("resources/main/dev/init.sql")
+                .get()
+                .asFile
                 .toPath()
                 .also {
                     it.parent.createDirectories()
-                }
-                .writeText(ddlString, options = arrayOf(StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING))
+                }.writeText(ddlString, options = arrayOf(StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING))
         }
     }
 }
@@ -144,7 +145,9 @@ tasks.register("prepareGitHooks") {
     doLast {
         val projectGitHooksPath = project.file(".githooks").toPath()
         if (projectGitHooksPath.notExists() || !projectGitHooksPath.isDirectory()) {
-            throw IllegalStateException("The .githooks folder is missing, please pull the project again, or clone the project, or roll back to the commit before the .githooks folder was missing.")
+            throw IllegalStateException(
+                "The .githooks folder is missing, please pull the project again, or clone the project, or roll back to the commit before the .githooks folder was missing.",
+            )
         }
         (project.file(".git").toPath() / "hooks").also {
             it.deleteRecursively()
@@ -162,9 +165,14 @@ tasks.register("checkGitCommitMessage") {
     doLast {
         // 可能是编码问题
         val message = File(project.findProperty("gitMessage") as String).readText().trimEnd()
-        val regex = Regex("^(feat|fix|docs|style|refactor|perf|test|chore|revert|ci)(\\(.*\\))?: [^\\n]{1,30}(\\n(\\n- .{1,100})+)?(\\n\\n(Fixes|Closes): #[0-9]+)?\$")
+        val regex =
+            Regex(
+                "^(feat|fix|docs|style|refactor|perf|test|chore|revert|ci)(\\(.*\\))?: [^\\n]{1,30}(\\n(\\n- .{1,100})+)?(\\n\\n(Fixes|Closes): #[0-9]+)?\$",
+            )
         if (!regex.matches(message)) {
-            throw IllegalStateException("git commit message format is incorrect, please refer to the specification at https://github.com/hammer-hfut/rehearsal-room-management-backend/wiki/%E5%BC%80%E5%8F%91%E8%A7%84%E8%8C%83%23git-%E6%8F%90%E4%BA%A4%E4%BF%A1%E6%81%AF")
+            throw IllegalStateException(
+                "git commit message format is incorrect, please refer to the specification at https://github.com/hammer-hfut/rehearsal-room-management-backend/wiki/%E5%BC%80%E5%8F%91%E8%A7%84%E8%8C%83%23git-%E6%8F%90%E4%BA%A4%E4%BF%A1%E6%81%AF",
+            )
         }
     }
 }

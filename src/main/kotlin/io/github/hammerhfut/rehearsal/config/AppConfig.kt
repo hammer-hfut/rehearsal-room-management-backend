@@ -18,8 +18,7 @@ interface AppConfig {
     @WithDefault("false")
     fun ignoreRole(): Boolean
 
-    @WithDefault("/auth/login")
-    fun loginApiPath(): String
+    fun tokenlessApiPrefix(): List<String>
 
     fun headerAuth(): String
 

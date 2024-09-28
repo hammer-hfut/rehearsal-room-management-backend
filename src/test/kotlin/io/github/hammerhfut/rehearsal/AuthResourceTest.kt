@@ -5,7 +5,7 @@ import io.github.hammerhfut.rehearsal.config.AppConfig
 import io.github.hammerhfut.rehearsal.exception.BusinessError
 import io.github.hammerhfut.rehearsal.exception.ErrorCode
 import io.github.hammerhfut.rehearsal.model.dto.LoginData
-import io.github.hammerhfut.rehearsal.service.CacheService
+import io.github.hammerhfut.rehearsal.service.UserInfoCacheService
 import io.github.hammerhfut.rehearsal.util.aesEncrypt
 import io.github.hammerhfut.rehearsal.util.generateSecretKeySpec
 import io.quarkus.test.junit.QuarkusTest
@@ -31,7 +31,7 @@ open class AuthResourceTest {
     private lateinit var objectMapper: ObjectMapper
 
     @Inject
-    private lateinit var cacheService: CacheService
+    private lateinit var userInfoCacheService: UserInfoCacheService
 
     var key: Long = 0
     var utoken: String = ""
@@ -51,16 +51,19 @@ open class AuthResourceTest {
             LoginData(
                 username = "s114514",
                 timestamp = userTimestamp,
-                password = "5569deedc5689d7bd106ed9411e7d5fea81540417a8ec9b23b4d1430d28c832a",
+                password = "e10adc3949ba59abbe56e057f20f883e",
             )
         val loginResponse =
             given()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(objectMapper.writeValueAsString(loginData))
-                .`when`().post("/auth/login")
+                .`when`()
+                .post("/auth/login")
                 .then()
                 .statusCode(200)
-                .extract().response().jsonPath()
+                .extract()
+                .response()
+                .jsonPath()
         key = loginResponse.getLong("timestamp") + userTimestamp
         logger.debug("[key]: $key")
         keySpec = generateSecretKeySpec(key)
@@ -76,7 +79,8 @@ open class AuthResourceTest {
         logger.debug("[token]: $token")
         given()
             .header(appConfig.headerAuth(), token)
-            .`when`().get(path)
+            .`when`()
+            .get(path)
             .then()
             .statusCode(200)
             .body(`is`(msgExpected))
@@ -88,7 +92,8 @@ open class AuthResourceTest {
         val token = generateToken(urlToken)
         given()
             .header(appConfig.headerAuth(), token)
-            .`when`().put(targetPath)
+            .`when`()
+            .put(targetPath)
             .then()
             .statusCode(200)
     }
@@ -105,20 +110,18 @@ open class AuthResourceTest {
         val user =
             given()
                 .header(appConfig.headerAuth(), token)
-                .`when`().get(path)
+                .`when`()
+                .get(path)
                 .then()
                 .statusCode(200)
-                .extract().response().jsonPath()
+                .extract()
+                .response()
+                .jsonPath()
 
         val id = user.getLong("id")
         logger.info("[userId] : $id")
-        logger.info("[role] : ${cacheService.getRoleByUserId(id)}")
-        logger.info("[user-utoken] : ${cacheService.findUserByUtoken(utoken)}")
-
-        cacheService.invalidateUser(id)
-        logger.info("[invalid-user-id] : ${cacheService.findUserById(id)}")
-        cacheService.invalidateUser(id)
-        logger.info("[invalid-user-utoken] : ${cacheService.findUserByUtoken(utoken)}")
+        logger.info("[role] : ${userInfoCacheService.getRoleByUserId(id)}")
+        logger.info("[user-utoken] : ${userInfoCacheService.findUserByUtoken(utoken)}")
     }
 
     @Test
@@ -131,13 +134,14 @@ open class AuthResourceTest {
         val roles =
             given()
                 .header(appConfig.headerAuth(), token)
-                .`when`().get(path)
+                .`when`()
+                .get(path)
                 .then()
                 .statusCode(200)
-                .extract().response().jsonPath()
+                .extract()
+                .response()
+                .jsonPath()
         logger.info("[role-cache]: $roles")
-        val id = cacheService.findUserByUtoken(utoken)?.id ?: throw BusinessError(ErrorCode.NOT_FOUND)
-        cacheService.invalidateUserRole(id)
-        logger.info("[invalid-role]: ${cacheService.getRoleByUserId(id)}")
+        userInfoCacheService.findUserByUtoken(utoken)?.id ?: throw BusinessError(ErrorCode.NOT_FOUND)
     }
 }

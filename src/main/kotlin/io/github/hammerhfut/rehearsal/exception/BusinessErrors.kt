@@ -4,16 +4,22 @@ import io.quarkus.runtime.annotations.RegisterForReflection
 import jakarta.ws.rs.core.Response
 import jakarta.ws.rs.core.Response.StatusType
 
-
-enum class ErrorCode(val code: Int, val status: StatusType = Response.Status.BAD_REQUEST) {
+enum class ErrorCode(
+    val code: Int,
+    val status: StatusType = Response.Status.BAD_REQUEST,
+) {
     BAD_PARAMS(100),
     NOT_FOUND(104),
     NOT_UNIQUE(105),
+    SUCCEED(200),
 
-    UNAUTHORIZED(300, Response.Status.UNAUTHORIZED),
-    FORBIDDEN(301, Response.Status.FORBIDDEN),
 
-    SERVER_ERROR(999, Response.Status.INTERNAL_SERVER_ERROR);
+    UNAUTHORIZED(401, Response.Status.UNAUTHORIZED),
+    NEED_REFRESH(4010, Response.Status.UNAUTHORIZED),
+    FORBIDDEN(403, Response.Status.FORBIDDEN),
+
+    SERVER_ERROR(999, Response.Status.INTERNAL_SERVER_ERROR),
+    ;
 
     companion object {
         @Suppress("NOTHING_TO_INLINE")
@@ -21,10 +27,13 @@ enum class ErrorCode(val code: Int, val status: StatusType = Response.Status.BAD
     }
 }
 
-data class BusinessError(val code: ErrorCode, override val message: String = code.name) : RuntimeException()
+data class BusinessError(
+    val code: ErrorCode,
+    override val message: String = code.name,
+) : RuntimeException()
 
 @RegisterForReflection
 data class ExceptionResponse(
     val code: Int,
-    val message: String
+    val message: String,
 )

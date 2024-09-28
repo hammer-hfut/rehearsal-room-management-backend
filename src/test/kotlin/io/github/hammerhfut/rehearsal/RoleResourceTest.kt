@@ -9,7 +9,7 @@ import io.github.hammerhfut.rehearsal.model.db.dto.CreateRoleData
 import io.github.hammerhfut.rehearsal.model.db.dto.CreateRoleGroupDto
 import io.github.hammerhfut.rehearsal.model.db.dto.SetUserRolesData
 import io.github.hammerhfut.rehearsal.model.dto.*
-import io.github.hammerhfut.rehearsal.service.CacheService
+import io.github.hammerhfut.rehearsal.service.UserInfoCacheService
 import io.github.hammerhfut.rehearsal.util.aesEncrypt
 import io.github.hammerhfut.rehearsal.util.generateSecretKeySpec
 import io.quarkus.test.junit.QuarkusTest
@@ -34,7 +34,7 @@ open class RoleResourceTest {
     private lateinit var objectMapper: ObjectMapper
 
     @Inject
-    private lateinit var cacheService: CacheService
+    private lateinit var userInfoCacheService: UserInfoCacheService
 
     var key: Long = 0
     var utoken: String = ""
@@ -72,16 +72,19 @@ open class RoleResourceTest {
             LoginData(
                 username = "s114514",
                 timestamp = userTimestamp,
-                password = "5569deedc5689d7bd106ed9411e7d5fea81540417a8ec9b23b4d1430d28c832a",
+                password = "e10adc3949ba59abbe56e057f20f883e",
             )
         val loginResponse =
             given()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(objectMapper.writeValueAsString(loginData))
-                .`when`().post("/auth/login")
+                .`when`()
+                .post("/auth/login")
                 .then()
                 .statusCode(200)
-                .extract().response().jsonPath()
+                .extract()
+                .response()
+                .jsonPath()
         key = loginResponse.getLong("timestamp") + userTimestamp
         logger.debug("[key]: $key")
         keySpec = generateSecretKeySpec(key)
@@ -94,10 +97,13 @@ open class RoleResourceTest {
         val result =
             given()
                 .header(appConfig.headerAuth(), tokenGenerator(path))
-                .`when`().get(path)
+                .`when`()
+                .get(path)
                 .then()
                 .statusCode(200)
-                .extract().response().jsonPath()
+                .extract()
+                .response()
+                .jsonPath()
 
         val jsonString = objectMapper.writeValueAsString(result.getList<GetAllRolesResponseElement>(""))
         val rolesJson = objectMapper.readValue(jsonString, object : TypeReference<List<GetAllRolesResponseElement>>() {})
@@ -108,10 +114,13 @@ open class RoleResourceTest {
         val path = "/role/user/$userId"
         given()
             .header(appConfig.headerAuth(), tokenGenerator(path))
-            .`when`().get(path)
+            .`when`()
+            .get(path)
             .then()
             .statusCode(200)
-            .extract().response().jsonPath()
+            .extract()
+            .response()
+            .jsonPath()
     }
 
     fun setUserRoles() {
@@ -132,21 +141,23 @@ open class RoleResourceTest {
             .header(appConfig.headerAuth(), tokenGenerator(path))
             .contentType(MediaType.APPLICATION_JSON)
             .body(objectMapper.writeValueAsString(input))
-            .`when`().put(path)
+            .`when`()
+            .put(path)
             .then()
             .statusCode(204)
         logger.info("[setUserRoles]: set")
     }
 
     fun getCache() {
-        logger.info("[CacheSize]: ${cacheService.getRoleByUserId(1)?.size}")
+        logger.info("[CacheSize]: ${userInfoCacheService.getRoleByUserId(1)?.size}")
     }
 
     fun deleteRole(id: Long) {
         val path = "/role/$id"
         given()
             .header(appConfig.headerAuth(), tokenGenerator(path))
-            .`when`().delete(path)
+            .`when`()
+            .delete(path)
             .then()
             .statusCode(204)
     }
@@ -168,9 +179,12 @@ open class RoleResourceTest {
                 .header(appConfig.headerAuth(), tokenGenerator(path))
                 .body(objectMapper.writeValueAsString(input))
                 .contentType(MediaType.APPLICATION_JSON)
-                .`when`().post(path)
+                .`when`()
+                .post(path)
                 .then()
-                .extract().response().jsonPath()
+                .extract()
+                .response()
+                .jsonPath()
         return result.getLong("")
     }
 
@@ -188,9 +202,12 @@ open class RoleResourceTest {
                 .header(appConfig.headerAuth(), tokenGenerator(path))
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(objectMapper.writeValueAsString(input))
-                .`when`().post(path)
+                .`when`()
+                .post(path)
                 .then()
-                .extract().response().jsonPath()
+                .extract()
+                .response()
+                .jsonPath()
         return result.getLong("")
     }
 
@@ -199,9 +216,12 @@ open class RoleResourceTest {
         val result =
             given()
                 .header(appConfig.headerAuth(), tokenGenerator(path))
-                .`when`().get(path)
+                .`when`()
+                .get(path)
                 .then()
-                .extract().response().jsonPath()
+                .extract()
+                .response()
+                .jsonPath()
         return result.getLong("roleGroup.id")
     }
 
