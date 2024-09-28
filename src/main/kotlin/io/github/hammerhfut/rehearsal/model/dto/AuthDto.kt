@@ -16,6 +16,7 @@ data class LoginData(
 data class LoginResponse(
     val utoken: String,
     val lifetime: Long,
+    val utokenLifeTime: Long,
     val timestamp: Long,
     val user: LoginUserResponse,
 )

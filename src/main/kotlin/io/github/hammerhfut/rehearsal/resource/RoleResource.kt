@@ -9,8 +9,8 @@ import io.github.hammerhfut.rehearsal.model.db.dto.CreateRoleData
 import io.github.hammerhfut.rehearsal.model.db.dto.MoveToRoleGroupData
 import io.github.hammerhfut.rehearsal.model.db.dto.SetUserRolesData
 import io.github.hammerhfut.rehearsal.model.dto.*
-import io.github.hammerhfut.rehearsal.service.CacheService
 import io.github.hammerhfut.rehearsal.service.RoleService
+import io.github.hammerhfut.rehearsal.service.UserInfoCacheService
 import io.smallrye.common.annotation.RunOnVirtualThread
 import jakarta.ws.rs.DELETE
 import jakarta.ws.rs.GET
@@ -30,22 +30,23 @@ import org.jboss.resteasy.reactive.RestPath
 class RoleResource(
     private val sqlClient: KSqlClient,
     private val roleService: RoleService,
-    private val cacheService: CacheService,
+    private val userInfoCacheService: UserInfoCacheService,
 ) {
     @GET
     @RunOnVirtualThread
     fun getAllRoles(): Set<GetAllRolesResponseElement> {
         val roles =
-            sqlClient.createQuery(Role::class) {
-                select(
-                    table.fetchBy {
-                        allScalarFields()
-                        roleGroup {
-                            name()
-                        }
-                    },
-                )
-            }.execute()
+            sqlClient
+                .createQuery(Role::class) {
+                    select(
+                        table.fetchBy {
+                            allScalarFields()
+                            roleGroup {
+                                name()
+                            }
+                        },
+                    )
+                }.execute()
         val roleGroupMap = roles.groupBy { it.roleGroup }
         val groupedRoles = mutableSetOf<GetAllRolesResponseElement>()
         roleGroupMap.forEach { (k, v) -> groupedRoles.add(GetAllRolesResponseElement(k, v)) }
@@ -59,16 +60,17 @@ class RoleResource(
         @RestPath id: Long,
     ): Role {
         val role =
-            sqlClient.createQuery(Role::class) {
-                where(table.id.eq(id))
-                select(
-                    table.fetchBy {
-                        allScalarFields()
-                        `children*`()
-                        roleGroup()
-                    },
-                )
-            }.fetchOneOrNull()
+            sqlClient
+                .createQuery(Role::class) {
+                    where(table.id.eq(id))
+                    select(
+                        table.fetchBy {
+                            allScalarFields()
+                            `children*`()
+                            roleGroup()
+                        },
+                    )
+                }.fetchOneOrNull()
                 ?: throw BusinessError(ErrorCode.NOT_FOUND)
         return role
     }
@@ -79,13 +81,14 @@ class RoleResource(
     fun moveToRoleGroup(input: MoveToRoleGroupData) {
 //        TODO
         val affectedRowCount =
-            sqlClient.createUpdate(Role::class) {
-                where(table.id eq input.roleId)
-                set(
-                    table.roleGroupId,
-                    input.roleGroupId,
-                )
-            }.execute()
+            sqlClient
+                .createUpdate(Role::class) {
+                    where(table.id eq input.roleId)
+                    set(
+                        table.roleGroupId,
+                        input.roleGroupId,
+                    )
+                }.execute()
         if (affectedRowCount == 0) throw BusinessError(ErrorCode.FORBIDDEN)
     }
 
@@ -94,11 +97,12 @@ class RoleResource(
     fun createRole(input: CreateRoleData): Long {
 //        TODO
         val id =
-            sqlClient.save(
-                input.toEntity().copy {
-                    editable = true
-                },
-            ).modifiedEntity.id
+            sqlClient
+                .save(
+                    input.toEntity().copy {
+                        editable = true
+                    },
+                ).modifiedEntity.id
         return id
     }
 
@@ -115,15 +119,13 @@ class RoleResource(
     @Path("/user/{id}")
     fun getRoleByUserId(
         @RestPath id: Long,
-    ): List<UserRoleBand> {
-        return roleService.getRoleByUserId(id)
-    }
+    ): List<UserRoleBand> = roleService.getRoleByUserId(id)
 
     @PUT
     @Path("/user")
     @RunOnVirtualThread
     fun setUserRoles(input: SetUserRolesData) {
         sqlClient.save(input.toEntity())
-        cacheService.invalidateUserRole(input.userId)
+        userInfoCacheService.invalidateUserRole(input.userId)
     }
 }

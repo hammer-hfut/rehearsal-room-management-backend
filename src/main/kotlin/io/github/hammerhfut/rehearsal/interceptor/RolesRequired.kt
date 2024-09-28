@@ -9,8 +9,8 @@ import io.github.hammerhfut.rehearsal.model.BasicRoles
 import io.github.hammerhfut.rehearsal.model.db.Band
 import io.github.hammerhfut.rehearsal.model.db.Role
 import io.github.hammerhfut.rehearsal.model.db.UserRoleBand
-import io.github.hammerhfut.rehearsal.service.AuthService
 import io.github.hammerhfut.rehearsal.service.RoleService
+import io.github.hammerhfut.rehearsal.service.UtokenCacheService
 import io.github.hammerhfut.rehearsal.util.splitToken
 import jakarta.annotation.Priority
 import jakarta.enterprise.util.Nonbinding
@@ -59,9 +59,9 @@ annotation class RolesRequired(
 @Suppress("MISSING_DEPENDENCY_CLASS")
 class RolesRequiredInterceptor(
     private val header: HttpHeaders,
-    private val authService: AuthService,
     private val roleService: RoleService,
     private val appConfig: AppConfig,
+    private val utokenCacheService: UtokenCacheService,
 ) {
     private val logger = Logger.getLogger("RolesRequiredLogger")
 
@@ -89,7 +89,9 @@ class RolesRequiredInterceptor(
 
     private fun getAnnotationInfo(context: InvocationContext): Pair<Array<String>, Boolean> {
         val annotation =
-            context.method.kotlinFunction?.findAnnotations(RolesRequired::class)?.get(0)
+            context.method.kotlinFunction
+                ?.findAnnotations(RolesRequired::class)
+                ?.get(0)
                 ?: throw BusinessError(ErrorCode.NOT_FOUND)
         val stringRoles = mutableListOf<String>()
         annotation.roles.forEach {
@@ -99,7 +101,7 @@ class RolesRequiredInterceptor(
     }
 
     private fun getRolesByUtoken(utoken: String): List<UserRoleBand> {
-        val id = authService.findUtokenCacheDataOrNull(utoken)?.userId ?: throw BusinessError(ErrorCode.UNAUTHORIZED)
+        val id = utokenCacheService.findUserId(utoken) ?: throw BusinessError(ErrorCode.UNAUTHORIZED)
         return roleService.getRoleByUserId(id)
     }
 
@@ -138,7 +140,10 @@ class RolesRequiredInterceptor(
     }
 
     private fun getBandId(context: InvocationContext): Long? {
-        val bandId = context.parameters[0].javaClass.declaredFields.firstOrNull { it.name == "bandId" }
+        val bandId =
+            context.parameters[0]
+                .javaClass.declaredFields
+                .firstOrNull { it.name == "bandId" }
         bandId?.isAccessible = true
         return bandId?.get(context.parameters[0]) as Long?
     }

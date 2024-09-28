@@ -5,7 +5,7 @@ import io.github.hammerhfut.rehearsal.exception.BusinessError
 import io.github.hammerhfut.rehearsal.exception.ErrorCode
 import io.github.hammerhfut.rehearsal.model.db.User
 import io.github.hammerhfut.rehearsal.model.dto.RoleWithBandId
-import io.github.hammerhfut.rehearsal.service.CacheService
+import io.github.hammerhfut.rehearsal.service.UserInfoCacheService
 import jakarta.enterprise.context.RequestScoped
 import jakarta.ws.rs.core.HttpHeaders
 
@@ -37,27 +37,21 @@ import jakarta.ws.rs.core.HttpHeaders
 class AuthUtil(
     private val headers: HttpHeaders,
     private val appConfig: AppConfig,
-    private val cacheService: CacheService,
+    private val userInfoCacheService: UserInfoCacheService,
 ) {
     fun getUser(): User? {
         val token = getUtoken()
-        return cacheService.findUserByUtoken(token)
+        return userInfoCacheService.findUserByUtoken(token)
     }
 
     private fun getUserId(): Long {
         val utoken = getUtoken()
-        return cacheService.findUserByUtoken(utoken)?.id ?: throw BusinessError(ErrorCode.NOT_FOUND)
+        return userInfoCacheService.findUserByUtoken(utoken)?.id ?: throw BusinessError(ErrorCode.NOT_FOUND)
     }
 
-    private fun getUtoken(): String {
-        return splitToken(getToken()).first
-    }
+    private fun getUtoken(): String = splitToken(getToken()).first
 
-    fun getToken(): String {
-        return headers.getHeaderString(appConfig.headerAuth())
-    }
+    fun getToken(): String = headers.getHeaderString(appConfig.headerAuth())
 
-    fun getBasicRoles(): List<RoleWithBandId>? {
-        return cacheService.getRoleByUserId(getUserId())
-    }
+    fun getBasicRoles(): List<RoleWithBandId>? = userInfoCacheService.getRoleByUserId(getUserId())
 }

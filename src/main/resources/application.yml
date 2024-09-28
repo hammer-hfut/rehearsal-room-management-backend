@@ -5,11 +5,24 @@ quarkus:
   http:
     port: 16458
     enable-compression: true
+    cors:
+      ~: true
+      origins: http://localhost:8088, http://localhost:8089
+      headers: accept, authorization, content-type, x-requested-with
+      methods: GET, OPTIONS, POST, PUT, DELETE
+      exposed-headers: Content-Disposition
+      access-control-max-age: 24H
+      access-control-allow-credentials: true
+    insecure-requests: enabled
+
+jimmer:
+  language: kotlin
+  show-sql: true
 
 app-config:
-  debug: true # 如果为 [true] 则跳过token和url认证
+  debug: false # 如果为 [true] 则跳过token和url认证
   ignore-role: true # 如果为 [true] 则跳过role校验
-  login-api-path: "/auth/login"
+  tokenless-api-prefix: /auth/login, /auth/refresh
   header-auth: "Authorization"
   user-cache-size:
       data: 100
